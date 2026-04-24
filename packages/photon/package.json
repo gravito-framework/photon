@@ -1,0 +1,164 @@
+{
+  "name": "@gravito/photon",
+  "sideEffects": false,
+  "version": "2.0.1",
+  "description": "Gravito Photon HTTP engine (compat wrapper)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-TW.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "bun": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "bun": "./dist/native.js",
+      "default": "./dist/native.js"
+    },
+    "./adapter": {
+      "types": "./dist/adapter/index.d.ts",
+      "bun": "./dist/adapter/index.js",
+      "default": "./dist/adapter/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "bun": "./dist/client.js",
+      "default": "./dist/client.js"
+    },
+    "./logger": {
+      "types": "./dist/logger.d.ts",
+      "bun": "./dist/logger.js",
+      "default": "./dist/logger.js"
+    },
+    "./jwt": {
+      "types": "./dist/jwt.d.ts",
+      "bun": "./dist/jwt.js",
+      "default": "./dist/jwt.js"
+    },
+    "./middleware/binary": {
+      "types": "./dist/middleware/binary.d.ts",
+      "bun": "./dist/middleware/binary.js",
+      "default": "./dist/middleware/binary.js"
+    },
+    "./middleware/htmx": {
+      "types": "./dist/middleware/htmx.d.ts",
+      "bun": "./dist/middleware/htmx.js",
+      "default": "./dist/middleware/htmx.js"
+    },
+    "./middleware/ratelimit": {
+      "types": "./dist/middleware/ratelimit.d.ts",
+      "bun": "./dist/middleware/ratelimit.js",
+      "default": "./dist/middleware/ratelimit.js"
+    },
+    "./middleware/ratelimit-redis": {
+      "types": "./dist/middleware/ratelimit-redis.d.ts",
+      "bun": "./dist/middleware/ratelimit-redis.js",
+      "default": "./dist/middleware/ratelimit-redis.js"
+    },
+    "./middleware/otel": {
+      "types": "./dist/middleware/otel.d.ts",
+      "bun": "./dist/middleware/otel.js",
+      "default": "./dist/middleware/otel.js"
+    },
+    "./middleware/streaming": {
+      "types": "./dist/middleware/streaming.d.ts",
+      "bun": "./dist/middleware/streaming.js",
+      "default": "./dist/middleware/streaming.js"
+    },
+    "./middleware/security": {
+      "types": "./dist/middleware/security/index.d.ts",
+      "bun": "./dist/middleware/security/index.js",
+      "default": "./dist/middleware/security/index.js"
+    },
+    "./middleware/body": {
+      "types": "./dist/middleware/security/body-size-limit.d.ts",
+      "bun": "./dist/middleware/security/body-size-limit.js",
+      "default": "./dist/middleware/security/body-size-limit.js"
+    },
+    "./middleware/cors": {
+      "types": "./dist/middleware/security/cors.d.ts",
+      "bun": "./dist/middleware/security/cors.js",
+      "default": "./dist/middleware/security/cors.js"
+    },
+    "./middleware/rate-limit": {
+      "types": "./dist/middleware/ratelimit.d.ts",
+      "bun": "./dist/middleware/ratelimit.js",
+      "default": "./dist/middleware/ratelimit.js"
+    },
+    "./http-exception": {
+      "types": "./dist/http-exception.d.ts",
+      "bun": "./dist/http-exception.js",
+      "default": "./dist/http-exception.js"
+    },
+    "./router/reg-exp-router": {
+      "types": "./dist/router/reg-exp-router.d.ts",
+      "bun": "./dist/router/reg-exp-router.js",
+      "default": "./dist/router/reg-exp-router.js"
+    },
+    "./router/trie-router": {
+      "types": "./dist/router/trie-router.d.ts",
+      "bun": "./dist/router/trie-router.js",
+      "default": "./dist/router/trie-router.js"
+    },
+    "./adapter/cloudflare": {
+      "types": "./dist/adapter/cloudflare.d.ts",
+      "bun": "./dist/adapter/cloudflare.js",
+      "default": "./dist/adapter/cloudflare.js"
+    },
+    "./adapter/vercel": {
+      "types": "./dist/adapter/vercel.d.ts",
+      "bun": "./dist/adapter/vercel.js",
+      "default": "./dist/adapter/vercel.js"
+    },
+    "./adapter/deno": {
+      "types": "./dist/adapter/deno.d.ts",
+      "bun": "./dist/adapter/deno.js",
+      "default": "./dist/adapter/deno.js"
+    }
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "build:dts": "bun run build.ts --dts-only",
+    "test": "bun test --timeout=10000",
+    "test:coverage": "bun test --timeout=10000 --coverage --coverage-reporter=lcov --coverage-dir coverage && bun run --bun scripts/check-coverage.ts",
+    "test:ci": "bun test --timeout=10000 --coverage --coverage-reporter=lcov --coverage-dir coverage && bun run --bun scripts/check-coverage.ts",
+    "typecheck": "bun tsc -p tsconfig.json --noEmit --skipLibCheck",
+    "test:unit": "bun test tests/ --timeout=10000",
+    "test:integration": "test $(find tests -name '*.integration.test.ts' 2>/dev/null | wc -l) -gt 0 && find tests -name '*.integration.test.ts' -print0 | xargs -0 bun test --timeout=10000 || echo 'No integration tests found'",
+    "publint": "publint"
+  },
+  "dependencies": {
+    "@gravito/core": "^2.0.6",
+    "@gravito/resilience": "workspace:*",
+    "cborg": "^4.3.2",
+    "jose": "^6.2.2",
+    "zod": "^4.3.6"
+  },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "bun-types": "^1.3.10"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gravito-framework/gravito.git",
+    "directory": "packages/photon"
+  }
+}

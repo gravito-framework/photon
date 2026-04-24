@@ -1,0 +1,6 @@
+{
+  "id": "08",
+  "title": "安全協議",
+  "content": "<p>安全性已內建於 Photon 核心。我們利用先進的標頭淨化和運行時保護，確保您的引擎在對抗條件下保持穩定。</p><h2>強化的標頭</h2><p>Photon 自動處理常見的安全標頭，開銷極低：</p><ul><li><strong>Content-Security-Policy:</strong> 預設嚴格。</li><li><strong>X-Content-Type-Options:</strong> nosniff。</li><li><strong>Strict-Transport-Security:</strong> 在生產環境中強制執行。</li></ul><div class=\"callout-tip\"><p>Photon 中的安全中介軟體經過預編譯，以避免在高流量 DDoS 緩解場景下的重新解析開銷。</p></div>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

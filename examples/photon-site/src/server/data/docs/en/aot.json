@@ -1,0 +1,6 @@
+{
+  "id": "11",
+  "title": "Routing Architecture",
+  "content": "<p>Photon uses an efficient routing system with a radix tree data structure for fast route matching. Routes are registered when you define them, and the router builds an optimized tree structure for matching.</p><h2>Routing Architecture</h2><p>The router uses a radix tree (also known as a trie) for route matching. This provides:</p><ul><li><strong>Fast Static Route Matching:</strong> Static routes are matched efficiently.</li><li><strong>Dynamic Parameter Extraction:</strong> Route parameters like <code>:id</code> are extracted during matching.</li><li><strong>Wildcard Support:</strong> Support for wildcard routes like <code>/api/*</code>.</li></ul><h2>Route Registration</h2><p>Routes are registered when you call methods like <code>app.get()</code> or <code>app.post()</code>:</p><pre><code>const app = new Photon()\n\n// Routes are registered immediately\napp.get('/users', handler)\napp.get('/users/:id', handler)\napp.post('/users', handler)\n\n// The router builds an optimized tree structure\n// for efficient matching at request time</code></pre>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

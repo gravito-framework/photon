@@ -1,0 +1,6 @@
+{
+  "id": "07",
+  "title": "API Reference",
+  "content": "<p>Photon provides a high-performance, strictly-typed API surface. Below are the primary interfaces for building Bun-native applications.</p><h2>The Photon Class</h2><pre><code>import { Photon } from '@gravito/photon'\n\nconst app = new Photon()\n\n// Routing methods\napp.get(path: string, ...handlers: Handler[]): this\napp.post(path: string, ...handlers: Handler[]): this\napp.put(path: string, ...handlers: Handler[]): this\napp.delete(path: string, ...handlers: Handler[]): this\napp.patch(path: string, ...handlers: Handler[]): this\n\n// Middleware\napp.use(middleware: Middleware): this\napp.use(path: string, middleware: Middleware): this\n\n// Route composition\napp.route(path: string, subApp: Photon): this\n\n// Fetch handler\napp.fetch(request: Request): Promise&lt;Response&gt;</code></pre><h3>Integration with Core</h3><p>When using with <code>@gravito/core</code>, Photon is automatically provided via the <code>PhotonAdapter</code>:</p><pre><code>import { PlanetCore, defineConfig, PhotonAdapter } from '@gravito/core'\n\nconst config = defineConfig({\n  adapter: new PhotonAdapter()\n})\n\nconst core = await PlanetCore.boot(config)\n// Access Photon via core.app or core.adapter.native</code></pre>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

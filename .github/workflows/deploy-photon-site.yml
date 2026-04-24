@@ -1,0 +1,62 @@
+name: Deploy Photon Site
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'examples/photon-site/**'
+      - 'packages/photon/**'
+      - 'packages/core/**'
+      - 'packages/ion/**'
+      - 'packages/prism/**'
+      - 'packages/freeze/**'
+      - 'packages/freeze-react/**'
+      - '.github/workflows/deploy-photon-site.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  deployments: write
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - name: Configure Git
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Install dependencies
+        run: bun install
+        env:
+          SKIP_INSTALL_SIMPLE_GIT_HOOKS: 1
+      - name: Build Dependencies
+        # Build all core packages that photon-site depends on with their transitive dependencies
+        run: |
+          bunx turbo run build \
+            --filter=@gravito/core \
+            --filter=@gravito/freeze \
+            --filter=@gravito/freeze-react \
+            --filter=@gravito/ion \
+            --filter=@gravito/photon \
+            --filter=@gravito/prism
+      - name: Build Photon Site
+        working-directory: examples/photon-site
+        # This runs the new 'build' script: vite build + build-static
+        run: bun run build
+        env:
+          NODE_ENV: production
+          GA_PHOTON_SITE: ${{ secrets.GA_PHOTON_SITE }}
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy examples/photon-site/dist/static --project-name=photon-site --branch=main

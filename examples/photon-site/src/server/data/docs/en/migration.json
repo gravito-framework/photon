@@ -1,0 +1,6 @@
+{
+  "id": "12",
+  "title": "Hono Migration",
+  "content": "<p>Switching from Hono to Photon takes less than 5 minutes. Photon provides 100% API compatibility with Hono, making it a drop-in replacement with additional optimizations and enterprise features.</p><h2>Drop-in Replacement</h2><p>Simply change your imports and initialization:</p><pre><code>// From Hono\nimport { Hono } from 'hono'\nconst app = new Hono()\n\n// To Photon\nimport { Photon } from '@gravito/photon'\nconst app = new Photon()</code></pre><h3>API Compatibility</h3><ul><li><strong>100% API Compatible:</strong> All Hono APIs work without changes.</li><li><strong>Middleware:</strong> Identical signature and behavior.</li><li><strong>Additional Features:</strong> Photon includes enterprise middleware like binary handling, JWT utilities, and Bun-specific adapters.</li></ul>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "10",
+  "title": "Context 池化",
+  "content": "<p>記憶體管理對於高並發系統至關重要。Photon 為其 Context 實例實現了一種先進的 <strong>物件池 (Object Pooling)</strong> 機制。</p><h2>消除 GC 壓力</h2><p>每個 HTTP 請求通常都會分配一個必須由垃圾回收器處理的 Context 物件。在高負載下，這會導致 GC 峰值。Photon 維護一個預先分配的 Context 池，在發送回應後立即回收這些實例。</p><ul><li><strong>池化實例：</strong> 256 (預設)</li><li><strong>溢出策略：</strong> 隨需建立並清理</li><li><strong>生命週期：</strong> 獲取 (acquire) -> 調度 (dispatch) -> 重置 (reset) -> 釋放 (release)</li></ul>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

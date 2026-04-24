@@ -1,0 +1,10 @@
+{
+  "id": "16",
+  "title": "效能調優",
+  "content": "<p>對於每一微秒都至關重要的關鍵任務應用程式，Photon 提供了深層次的效能調優選項，並由嚴格的 <strong>效能預算 (Performance Budget)</strong> 提供背書。</p><h3>效能預算</h3><p>我們對整個引擎流水線 (Router + Middleware + Context) 強制執行 <strong>< 2.5µs / 請求</strong> 的嚴格開銷預算。這在每個 CI 週期中都透過 <code>benchmarks/budget.ts</code> 測試套件進行驗證，確保在添加新功能時零效能倒退。</p><h3>純靜態模式 (Pure Static Mode)</h3><p>Photon 會自動優化不使用中介軟體或複雜路徑參數的路由。這些路由會被編譯成 O(1) 的 Hash Map 查找，繞過整個路由樹和 Context 分配邏輯。</p><pre><code>// 純靜態路由 (無 Context 分配)\napp.get('/ping', (c) => {\n  return c.text('pong')\n})</code></pre><h3>垃圾回收 (GC) 管理</h3><p>在高負載場景下，您可以在 Photon 中介軟體中使用 <code>Bun.gc(true)</code>，在引擎遙測偵測到的「靜默期」期間手動觸發記憶體清理。</p>",
+  "meta": {
+    "lastUpdated": "2026-02-26",
+    "complexity": "HARD_LEVEL",
+    "category": "ADVANCED"
+  }
+}

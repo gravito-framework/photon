@@ -1,0 +1,6 @@
+{
+  "id": "08",
+  "title": "Security Protocol",
+  "content": "<p>Security is baked into the Photon core. We utilize advanced header sanitization and runtime protection to ensure your engine remains stable under adversarial conditions.</p><h2>Hardened Headers</h2><p>Photon automatically handles common security headers with minimal overhead:</p><ul><li><strong>Content-Security-Policy:</strong> Strict by default.</li><li><strong>X-Content-Type-Options:</strong> nosniff.</li><li><strong>Strict-Transport-Security:</strong> Enforced in production.</li></ul><div class=\"callout-tip\"><p>Security middlewares in Photon are pre-compiled to avoid re-parsing overhead during high-volume DDoS mitigation scenarios.</p></div>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

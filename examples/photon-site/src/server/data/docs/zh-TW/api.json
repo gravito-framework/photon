@@ -1,0 +1,6 @@
+{
+  "id": "07",
+  "title": "API 參考",
+  "content": "<p>Photon 提供一個高效能、嚴格型別化的 API 介面。以下是構建 Bun 原生應用程式的主要介面。</p><h2>Photon 類別</h2><pre><code>import { Photon } from '@gravito/photon'\n\nconst app = new Photon()\n\n// 路由方法\napp.get(path: string, ...handlers: Handler[]): this\napp.post(path: string, ...handlers: Handler[]): this\napp.put(path: string, ...handlers: Handler[]): this\napp.delete(path: string, ...handlers: Handler[]): this\napp.patch(path: string, ...handlers: Handler[]): this\n\n// 中介軟體\napp.use(middleware: Middleware): this\napp.use(path: string, middleware: Middleware): this\n\n// 路由組合\napp.route(path: string, subApp: Photon): this\n\n// Fetch 處理器\napp.fetch(request: Request): Promise&lt;Response&gt;</code></pre><h3>與 Core 整合</h3><p>當與 <code>@gravito/core</code> 一起使用時，Photon 會透過 <code>PhotonAdapter</code> 自動提供：</p><pre><code>import { PlanetCore, defineConfig, PhotonAdapter } from '@gravito/core'\n\nconst config = defineConfig({\n  adapter: new PhotonAdapter()\n})\n\nconst core = await PlanetCore.boot(config)\n// 透過 core.app 或 core.adapter.native 存取 Photon</code></pre>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}

@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects for SPA routing
+# Query parameters are preserved automatically by Cloudflare Pages
+# All routes should be handled by the static HTML files
+
+# Fallback: serve index.html for all routes (SPA fallback)
+# This ensures that routes with query parameters work correctly
+/* /index.html 200

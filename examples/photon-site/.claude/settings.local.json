@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh pr view:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh run list:*)",
+      "Bash(bun run test:coverage:*)",
+      "Bash(bun run test:ci:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: [stasis] 增強測試覆蓋率檢查腳本的健壯性\n\n改進覆蓋率檢查腳本的錯誤處理與執行方式：\n- 添加 lcov.info 文件存在性檢查\n- 添加文件讀取失敗的異常處理\n- 使用 bun run --bun 替代相對路徑，確保 CI 環境兼容性\n- 改進錯誤信息以便調試\n\n驗證：83 tests pass ✅\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(bun run build:*)",
+      "Bash(bun test:*)",
+      "Bash(echo:*)",
+      "Bash(bun exec turbo run:*)",
+      "Bash(bun run:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 統一升級所有包的測試覆蓋率檢查機制\n\n改進測試覆蓋率驗證方式，解決 Bun --coverage-threshold 在 CI 環境的問題：\n- 為所有 43 個使用舊方式的包新增 scripts/check-coverage.ts\n- 改用 bun test --coverage-reporter=lcov + 自定義檢查腳本\n- 只計算 src/ 目錄的覆蓋率，排除依賴包影響\n- 添加文件存在性檢查與錯誤處理，提升可靠性\n- 創建自動修復腳本 scripts/fix-coverage-threshold.ts\n\n已測試包覆蓋率：\n- @gravito/stasis: 83.61% ✅\n- @gravito/flux: 85.83% ✅\n\n後續將逐一修復覆蓋率不足的包（如 @gravito/luminosity 實際 66.49%）\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(for pkg in packages/luminosity packages/freeze-react packages/freeze-vue packages/freeze)",
+      "Bash(1 done)",
+      "Bash(wc:*)",
+      "Bash(find:*)",
+      "Bash(awk:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ntest: 改善 echo、freeze-react 和 freeze 套件的測試覆蓋率\n\n實施以下改進：\n- freeze-react: 71.33% → 87.31% \\(+16%\\) 🎉 達到 80%+ 目標\n- freeze: 76% → 95.59% \\(+19.59%\\) 🎉 達到 80%+ 目標  \n- echo: 82.02% → 85.83% \\(+3.81%\\) 接近 90% 目標\n\n新增內容：\n- 新增 55+ 個測試用例\n- 覆蓋 MemoryDeadLetterQueue、ConsoleEchoLogger、PrometheusMetricsProvider 等核心模組\n- 添加 Builder、RobotsTxt、404Html、RouteValidator 等實用函數的測試\n- 增強 OrbitEcho、FreezeProvider 等整合層的測試\n\n測試統計：\n- 所有測試通過 ✅\n- 覆蓋行數增加 75+ 行\n- 測試品質提升顯著\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ntest: 改善 echo、freeze-react 和 freeze 套件的測試覆蓋率\n\n實施以下改進：\n- freeze-react: 71.33% → 87.31% \\(+16%\\) ✅ 達到 80%+ 目標\n- freeze: 76% → 95.59% \\(+19.59%\\) ✅ 達到 80%+ 目標\n- echo: 82.02% → 85.83% \\(+3.81%\\) 接近 90% 目標\n\n新增內容：\n- 新增 55+ 個測試用例\n- 覆蓋 MemoryDeadLetterQueue、ConsoleEchoLogger、PrometheusMetricsProvider 等核心模組\n- 添加 Builder、RobotsTxt、404Html、RouteValidator 等實用函數的測試\n- 增強 OrbitEcho、FreezeProvider 等整合層的測試\n\n測試統計：\n- 所有測試通過 ✅\n- 覆蓋行數增加 75+ 行\n- 測試品質提升顯著\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix: [create-gravito-app] 修正覆蓋率檢查腳本以支援根目錄的 index.js\n\ncreate-gravito-app 包的代碼在根目錄的 index.js，而不是標準的 src/ 目錄。\n修改 check-coverage.ts 腳本使其也能識別並統計根目錄下 index.* 檔案的覆蓋率。\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(node -e:*)",
+      "Bash(bun -e:*)",
+      "Bash(bun tsc:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\ntest: 提升 astral、impulse 和 dark-matter 包的測試覆蓋率\n\n改進了三個關鍵包的測試覆蓋率以符合 CI 要求：\n\n**@gravito/astral**：83.61% → 100% \\(746/746 行\\)\n- 新增 errors.test.ts 完整覆蓋所有錯誤類\n- 擴充 hash.test.ts 支援複雜 Zod 類型\n- 新增 index.test.ts 測試 install 方法和驗證邏輯\n- 165 個測試全部通過\n\n**@gravito/impulse**：77.69% → 96.96% \\(734/757 行\\)\n- 新增 valibot-form-request.test.ts 涵蓋 37 個測試\n- 新增 zod-form-request.test.ts 補充缺失分支\n- 104 個測試全部通過\n\n**@gravito/dark-matter**：25.56% → 預期 85%+\n- 在 CI 工作流中新增 MongoDB 服務容器\n- 設置 MONGODB_URI 環境變數\n- 使集成測試不再被跳過\n\nCI 改進：\n- 添加 MongoDB 7 服務以支援集成測試\n- 配置健康檢查確保服務就緒\n\n🤖 Generated with Claude Code\nEOF\n\\)\")",
+      "Bash(gh api:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(for:*)",
+      "Bash(done)",
+      "Bash(bunx biome check:*)",
+      "Bash(bun --version:*)",
+      "Bash(COVERAGE_THRESHOLD=0 bun test:*)"
+    ]
+  }
+}

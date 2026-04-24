@@ -1,0 +1,10 @@
+{
+  "id": "07",
+  "title": "Exception Handling",
+  "content": "<p>Photon implements a fail-safe execution environment. We believe that a single crashing request should never compromise the stability of the entire kernel.</p><h3>The Safety Net (onError)</h3><p>Define a global error handler to catch any unhandled exceptions in your logic. Photon will automatically pass the error and the current context.</p><pre><code>app.onError((err, c) => {\n  const errorCode = err instanceof ValidationError ? 400 : 500\n  return c.json({\n    status: 'SYSTEM_FAILURE',\n    message: err.message,\n    traceId: c.get('trace_id')\n  }, errorCode)\n})</code></pre><h3>404 Management (notFound)</h3><p>Customizing the behavior for non-existent routes is straightforward. This is often used for custom SPA fallback logic.</p><pre><code>app.notFound((c) => {\n  return c.html('&lt;h1&gt;404: Zone Not Found&lt;/h1&gt;', 404)\n})</code></pre><h3>Atomic Commits</h3><p>In Photon, if an error happens mid-request, any headers set before the error are discarded, and the Error Handler gets a fresh state to ensure the client receives a valid error response.</p>",
+  "meta": {
+    "lastUpdated": "2026-02-26",
+    "complexity": "MID_LEVEL",
+    "category": "CORE_ENGINE"
+  }
+}

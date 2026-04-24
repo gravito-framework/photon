@@ -1,0 +1,10 @@
+{
+  "id": "16",
+  "title": "Perf Tuning",
+  "content": "<p>For mission-critical applications where every microsecond counts, Photon provides deep-level performance tuning knobs backed by a strict <strong>Performance Budget</strong>.</p><h3>The Performance Budget</h3><p>We enforce a strict overhead budget of <strong>< 2.5µs per request</strong> for the entire engine pipeline (Router + Middleware + Context). This is validated in every CI cycle using the <code>benchmarks/budget.ts</code> suite, ensuring zero regressions as features are added.</p><h3>Pure Static Mode</h3><p>Photon automatically optimizes routes that do not use middleware or complex path parameters. These routes are compiled into an O(1) hash map lookup, bypassing the entire routing tree and context allocation logic.</p><pre><code>// Pure Static Route (No Context Allocation)\napp.get('/ping', (c) => {\n  return c.text('pong')\n})</code></pre><h3>Garbage Collection Management</h3><p>In high-load scenarios, you can use <code>Bun.gc(true)</code> in a Photon middleware to manually trigger memory cleanup during \"Silence periods\" detected by the engine's telemetry.</p>",
+  "meta": {
+    "lastUpdated": "2026-02-26",
+    "complexity": "HARD_LEVEL",
+    "category": "ADVANCED"
+  }
+}

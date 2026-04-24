@@ -1,0 +1,10 @@
+{
+  "id": "12",
+  "title": "Hono 遷移指南",
+  "content": "<p>從 Hono 切換到 Photon 只需不到 5 分鐘。Photon 提供與 Hono 100% API 相容性，可作為直接替換，並包含額外的優化和企業級功能。</p><h2>直接替換</h2><p>只需更改您的導入和初始化：</p><pre><code>// From Hono\nimport { Hono } from 'hono'\nconst app = new Hono()\n\n// To Photon\nimport { Photon } from '@gravito/photon'\nconst app = new Photon()</code></pre><h3>API 相容性</h3><ul><li><strong>100% API 相容:</strong> 所有 Hono API 無需修改即可使用。</li><li><strong>中介軟體:</strong> 相同的簽名和行為。</li><li><strong>額外功能:</strong> Photon 包含企業級中介軟體，如二進位處理、JWT 工具和 Bun 專用適配器。</li></ul>",
+  "meta": {
+    "lastUpdated": "2026-02-26",
+    "complexity": "BASE_LEVEL",
+    "category": "RESOURCES"
+  }
+}

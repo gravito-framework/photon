@@ -1,0 +1,10 @@
+{
+  "id": "07",
+  "title": "異常處理",
+  "content": "<p>Photon 實作了一個故障安全（fail-safe）的執行環境。我們認為，單個崩潰的請求永遠不應損害整個內核的穩定性。</p><h3>安全網 (onError)</h3><p>定義一個全域錯誤處理程序來捕捉邏輯中任何未處理的異常。Photon 將自動傳遞錯誤和當前上下文。</p><pre><code>app.onError((err, c) => {\n  const errorCode = err instanceof ValidationError ? 400 : 500\n  return c.json({\n    status: 'SYSTEM_FAILURE',\n    message: err.message,\n    traceId: c.get('trace_id')\n  }, errorCode)\n})</code></pre><h3>404 管理 (notFound)</h3><p>自定義不存在路由的行為非常簡單。這通常用於自定義 SPA 回退邏輯。</p><pre><code>app.notFound((c) => {\n  return c.html('&lt;h1&gt;404: Zone Not Found&lt;/h1&gt;', 404)\n})</code></pre><h3>原子提交</h3><p>在 Photon 中，如果請求中途發生錯誤，錯誤發生前設定的任何標頭都會被丟棄，錯誤處理程序會獲得一個全新的狀態，以確保客戶端收到有效的錯誤回應。</p>",
+  "meta": {
+    "lastUpdated": "2026-02-26",
+    "complexity": "MID_LEVEL",
+    "category": "CORE_ENGINE"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "id": "10",
+  "title": "Context Pooling",
+  "content": "<p>Memory management is critical for high-concurrency systems. Photon implements an advanced <strong>Object Pooling</strong> mechanism for its context instances.</p><h2>GC Elimination</h2><p>Each HTTP request typically allocates a context object that must be garbage collected. Under high load, this causes GC spikes. Photon maintains a pre-allocated pool of contexts that are recycled immediately after a response is sent.</p><ul><li><strong>Pooled Instances:</strong> 256 (Default)</li><li><strong>Overflow Strategy:</strong> On-demand creation with cleanup</li><li><strong>Lifecycle:</strong> acquire -> dispatch -> reset -> release</li></ul>",
+  "meta": { "lastUpdated": "2026-02-26" }
+}
