@@ -544,3 +544,68 @@ for (const transport of ['request', 'fetch', 'socket'] as const) {
     })
   })
 }
+
+test('fetch awaits its per-dispatch Context observer before pre-existing middleware', async () => {
+  const app = new Photon<{ owner: string }>()
+  app.use(async (c, next) => {
+    c.header('x-owner', c.get('owner'))
+    await next()
+  })
+  app.get('/', (c) => c.text(c.get('owner')))
+  const request = new Request('http://localhost/')
+  const responses = await Promise.all(
+    ['first', 'second'].map((owner) =>
+      app.fetch(request, undefined, async (c) => {
+        await Bun.sleep(owner === 'first' ? 2 : 1)
+        c.set('owner', owner)
+      })
+    )
+  )
+  expect(await Promise.all(responses.map((r) => r.text()))).toEqual(['first', 'second'])
+  expect(responses.map((r) => r.headers.get('x-owner'))).toEqual(['first', 'second'])
+})
+
+test('observer failures use onError and release pooled contexts for the next dispatch', async () => {
+  const app = new Photon<{ owner?: string }>()
+  let handlers = 0
+  app.get('/', (c) => {
+    handlers++
+    return c.text(c.get('owner') ?? 'fresh')
+  })
+  app.onError((error, c) => c.text(`${error.message}:${c.get('owner')}`, 503))
+  for (const asynchronous of [false, true]) {
+    const response = await app.fetch(new Request('http://localhost/'), undefined, (c) => {
+      c.set('owner', 'observed')
+      if (asynchronous) {
+        return Promise.reject(new Error('observer'))
+      }
+      throw new Error('observer')
+    })
+    expect(response.status).toBe(503)
+    expect(await response.text()).toBe('observer:observed')
+  }
+  expect(handlers).toBe(0)
+  app.onError(() => {
+    throw new Error('renderer failed')
+  })
+  expect(
+    (
+      await app.fetch(new Request('http://localhost/'), undefined, () => {
+        throw new Error('observer')
+      })
+    ).status
+  ).toBe(500)
+  expect(await (await app.fetch(new Request('http://localhost/'))).text()).toBe('fresh')
+  expect(handlers).toBe(1)
+})
+
+test('fast routes bypass the per-dispatch Context observer', async () => {
+  const app = new Photon()
+  app.fast.get('/', () => new Response('fast'))
+  let observed = false
+  const response = await app.fetch(new Request('http://localhost/'), undefined, () => {
+    observed = true
+  })
+  expect(await response.text()).toBe('fast')
+  expect(observed).toBe(false)
+})

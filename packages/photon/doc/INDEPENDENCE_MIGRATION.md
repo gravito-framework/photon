@@ -1,6 +1,6 @@
 # Independent Photon: unreleased major migration
 
-Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP contracts are verified by Story08. Story09 adds the reproducible [release rehearsal](RELEASE.md) and [benchmark](BENCHMARK.md); Gravito integration remains a later story.
+Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP contracts are verified by Story08. Story09 adds the reproducible [release rehearsal](RELEASE.md) and [benchmark](BENCHMARK.md); Gravito integration is provided by the unreleased `@gravito/photon-gravito` package; see its [migration guide](../../photon-gravito/README.md).
 
 ## Complete previous export map
 
@@ -9,8 +9,8 @@ Paths below are relative to `@gravito/photon`, compared with commit `ae0db3aa40f
 | Previous path | Disposition and current contract |
 | --- | --- |
 | `.` | Retained: `Photon`, local `GravitoContext`, `GravitoHandler`, `GravitoMiddleware`, `GravitoErrorHandler`, `GravitoNotFoundHandler`. Adds `GravitoVariables`, `GravitoNext`, fast-handler and serve-config types. Old middleware exports move to the subpaths below. |
-| `./native` | Replaced in place with independent SSE, streaming and WebSocket helpers plus local context/middleware/next types. `NativePhoton` is removed: it was the core engine constructor, not an alias for Photon. Use `Photon` for an independent application; framework identity belongs to the deferred integration. |
-| `./adapter` | Moved to deferred Gravito integration. Import is intentionally rejected. `PhotonAdapter`, adapter helpers and framework type guards are preserved in the private regression fixture; final package name/exports remain undecided. |
+| `./native` | Replaced in place with independent SSE, streaming and WebSocket helpers plus local context/middleware/next types. `NativePhoton` is removed: it was the core engine constructor, not an alias for Photon. Use `Photon` for an independent application; framework execution uses `PhotonAdapter` from `@gravito/photon-gravito`. |
+| `./adapter` | Moved to `@gravito/photon-gravito/adapter` (also re-exported at its root). The old import remains intentionally rejected. All adapter aliases, helpers, guards and associated types migrate there. |
 | `./client` | Retained Hono `hc` compatibility export. Its RPC type contract is for Hono applications, not the independent Photon class. |
 | `./logger` | Retained native `logger`. |
 | `./jwt` | Retained `jwt`, `sign`, `verify`, `decode`, `verifyWithJwks` and their option/payload/header types. |
@@ -88,7 +88,7 @@ Framework-only material moved without deleting historical behavior tests:
 - `packages/photon/src/middleware/circuit-breaker.ts` and its two test files → the same relative paths under `examples/photon-framework-regression/`.
 - Original `native.ts` and `http-exception.ts` → the fixture's `src/`; historical exception identity and Beam assertions → its `tests/exports.test.ts`.
 
-The fixture is private and not the future integration package. `bun run --cwd examples/photon-framework-regression test` retains the 19 moved tests. Passing them does not establish A7, a supported core pairing or framework Context integration. The later integration story owns those contracts.
+The fixture is private and not the future integration package. `bun run --cwd examples/photon-framework-regression test` retains the 19 moved tests. Passing them does not establish A7, a supported core pairing or framework Context integration. Story10 owns those contracts in `packages/photon-gravito`; its `test:integration-package` gate tests actual tarballs, lifecycle, framework types, Circuit Breaker and the executable migration example.
 
 `bun run test:source-isolation` copies the actual Photon package outside the repository without dist/node_modules, then installs, builds, typechecks and tests it. `bun run test:standalone` clean-builds and packs it, checks the dependency tree, links and declarations, verifies every public entry, asserts invalid types and runs socket HTTP contracts. Both require Bun 1.4.4. The consumer explicitly installs TypeScript 5.9.3, bun-types 1.3.10 and Deno types only for the Deno compatibility type check; root typing needs no Deno or OTel ambient declarations.
 
@@ -138,3 +138,33 @@ including assertion failures. This is a Bun 1.4.4 contract, not a new platform c
 
 Rollback is the Story08-only diff; preserve the independent engine/API migration
 from Stories06–07 and the existing Bun pins. No intermediate release is authorized.
+
+## Story10 framework integration
+
+Use `PhotonAdapter` from `@gravito/photon-gravito/adapter` with `PlanetCore`. Move the
+historical Circuit Breaker import to `@gravito/photon-gravito/middleware/circuit-breaker`.
+Framework Context/handler/variables types and RequestScopeManager are exported by the
+integration root; independent Photon contexts remain HTTP-only. There is no global
+Photon type augmentation or reverse dependency.
+
+Run framework applications through `adapter.fetch`, including `Bun.serve({ fetch: adapter.fetch })`.
+Direct native Photon dispatch of framework handlers is rejected; it cannot own scope
+cleanup. `native` remains available for configuration, and an existing Photon may be
+injected into the adapter, including pre-existing HTTP and framework conversion middleware.
+A per-call HTTP-only Context observer captures ownership before that middleware runs.
+One Photon instance belongs to one adapter. Parent/child adapters own separate scopes.
+`setNative` after registration/dispatch is rejected. RequestScope cleanup is awaited after
+middleware and error rendering; retained wrappers cannot be used afterward.
+
+The [integration migration guide](../../photon-gravito/README.md) contains the exact
+entry mapping and a complete runnable example; its socket fixture runs from installed
+tarballs. The tested pair is Photon 2.0.1, integration 0.1.0, core 3.0.1 and resilience
+2.0.0, with explicit OpenTelemetry API 1.9.0 on Bun 1.4.4. No other version range is certified.
+These are unreleased local artifacts, not a published compatibility claim.
+
+`Photon.fetch(request, server?, onContext?)` now accepts an optional per-call Context
+observer. It is awaited before route parameter matching and middleware, so parameters
+are not populated yet. Observer failures use the existing error handler and Context
+cleanup boundary. Fast paths and successful WebSocket upgrades bypass observation.
+With no observer there is no additional await. The integration uses this HTTP-only seam
+to capture its exact Context before user code; Photon gains no framework dependency.

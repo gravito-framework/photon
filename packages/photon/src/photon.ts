@@ -12,6 +12,7 @@ import type { PhotonServeConfig, PhotonServeOptions } from './engine/serve-types
 
 import { BunNativeAdapter } from './engine/BunNativeAdapter'
 import type {
+  GravitoContext,
   GravitoErrorHandler,
   GravitoMiddleware,
   GravitoNotFoundHandler,
@@ -158,8 +159,15 @@ export class Photon<V extends object = GravitoVariables> {
     return this
   }
 
-  async fetch(request: Request, server?: unknown): Promise<Response> {
-    return this.adapter.fetch(request, server)
+  /** Observe this dispatch's Context before middleware and parameter matching.
+   * Observer failures use onError. Fast paths and WebSocket upgrades bypass observation.
+   */
+  async fetch(
+    request: Request,
+    server?: unknown,
+    onContext?: (context: GravitoContext<V>) => void | Promise<void>
+  ): Promise<Response> {
+    return this.adapter.fetch(request, server, onContext)
   }
 
   async request(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {

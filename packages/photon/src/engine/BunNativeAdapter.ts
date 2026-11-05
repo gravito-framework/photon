@@ -331,7 +331,11 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
     }
   }
 
-  async fetch(request: Request, _server?: unknown): Promise<Response> {
+  async fetch(
+    request: Request,
+    _server?: unknown,
+    onContext?: (context: GravitoContext<V>) => void | Promise<void>
+  ): Promise<Response> {
     const url = new URL(request.url)
     const path = url.pathname
 
@@ -366,6 +370,9 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
     const ctx = this.acquireContext(request)
 
     try {
+      if (onContext) {
+        await onContext(ctx)
+      }
       const method = request.method
 
       const match = this.router.match(method, path)
