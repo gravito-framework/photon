@@ -1,217 +1,98 @@
-# Photon — independent engine development slice
+# @gravito/photon
 
-This is an unreleased major-version migration. Gravito integration is not yet restored.
+Independent HTTP routing, middleware and typed request contexts for Bun.
+This is an **unreleased major migration**. The package version is still historical;
+registry installs do not provide this development snapshot. Gravito integration (A7)
+is pending; no compatible core version pairing is claimed.
+
+## Start a local HTTP API
+
+Use Bun **1.4.4**, the runtime exercised by this release rehearsal. From this package:
 
 ```sh
-bun add @gravito/photon
+bun install --ignore-scripts
+bun run build
+bun pm pack --destination /tmp
 ```
 
-The install command above applies after this version is released. To try this local slice, run `bun run build`, `bun pm pack`, then install the generated tarball in a separate project.
+Create an empty directory outside the repository. Replace the archive path with the
+filename printed by `bun pm pack`:
 
-```ts
-import { Photon } from '@gravito/photon'
-
-const app = new Photon()
-app.get('/hello', c => c.json({ message: 'Hello' }))
-app.onError((_error, c) => c.json({ error: 'Internal error' }, 500))
-Bun.serve({ port: 3000, fetch: request => app.fetch(request) })
+```sh
+mkdir photon-api
+cd photon-api
+bun init -y
+bun add /tmp/gravito-photon-2.0.1.tgz
+bun add -d typescript@5.9.3 bun-types@1.3.10
 ```
 
-Run `bun run test:standalone` for a clean tarball install, strict consumer typecheck and real HTTP contract tests. The runtime package does not install Gravito core or resilience. Run `bun run test:source-isolation` to verify source install/build/typecheck/test outside the monorepo. Framework-only regression tests are preserved separately under `examples/photon-framework-regression`.
-
-## Typed variables and optional modules
+Save this as `app.ts`:
 
 ```ts
 import { Photon } from '@gravito/photon'
 import { cors } from '@gravito/photon/middleware/cors'
 import { HttpException } from '@gravito/photon/http-exception'
 
-interface Variables { user: string }
-const app = new Photon<Variables>()
+export const app = new Photon<{ user: string }>()
 app.use(cors())
-app.use(async (c, next) => { c.set('user', 'Ada'); await next() })
-app.get('/', c => c.json({ user: c.get('user') }))
-app.onError((error, c) => c.text(error.message, error instanceof HttpException ? error.status : 500))
-Bun.serve(app.serveConfig({ port: 3000 }))
-```
-
-Initialize required variables before use. For typed JWT/HTMX applications, include `JwtVariables`/`HtmxVariables` in your variable map; [the migration guide](doc/INDEPENDENCE_MIGRATION.md) covers callback generics and write compatibility. Mounted children have their own Context. Middleware is imported through its documented subpath. OTel is optional (`bun add @opentelemetry/api`); without it, tracing middleware is a no-op. Redis rate limiting requires a compatible client supplied by the caller. Hono client/router/platform paths retain Hono contracts and do not establish native Photon platform support. Deno adapter types need Deno ambient declarations, and the adapter cannot currently be imported under Bun.
-
-See [migration status](doc/INDEPENDENCE_MIGRATION.md). The previous framework-oriented documentation below is historical and is being replaced in subsequent stories.
-
----
-
-# @gravito/photon
-
-> The high-performance HTTP engine powering the Gravito Galaxy Architecture.
-
-[![npm version](https://img.shields.io/npm/v/@gravito/photon.svg)](https://www.npmjs.com/package/@gravito/photon)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Bun](https://img.shields.io/badge/Bun-1.0+-black.svg)](https://bun.sh/)
-
-**@gravito/photon** is the core HTTP engine of the Gravito framework. It provides foundational routing, middleware, and request/response handling.
-
-## 📊 Project Status
-
-| Metric | Status | Coverage |
-|--------|--------|----------|
-| **Core Engine** | ✅ Stable | 99.21% |
-| **JWT Module** | ✅ Type-Safe | 92.86% |
-| **Binary (CBOR)** | ✅ Optimized | 100% |
-| **Security Middleware** | ✅ Stable | 65 tests |
-
-> View the [Full Optimization History](./doc/HISTORY_OPTIMIZATIONS.md).
-
----
-
-## ✨ Features
-
-- 🚀 **Extreme Native Performance**: Custom engine optimized for Bun 1.39+, featuring SIMD-accelerated routing and zero-allocation context pooling.
-- 🏎️ **Native Offloading**: Automatically offloads static routes and pre-compiled middleware chains to Bun's internal C++/Zig router.
-- 🎯 **Type-Safe Routing**: Full TypeScript support with intelligent type inference for parameters, query, and body.
-- 🌌 **Galaxy-Ready**: Designed as the "Sensing Layer" to host Satellites (domains) and Orbits (infrastructure).
-- 🔌 **Plug & Play Middleware**: Composable middleware for auth, validation, security, and protocol handling (HTMX/CBOR).
-- 📡 **Beam RPC Support**: Foundation for `@gravito/beam` for end-to-end type-safe client-server communication.
-- 🛡️ **Enterprise Security**: Built-in CORS, CSRF, HSTS, Rate Limiting, and Body Size limiting.
-
-## 🌌 Role in Galaxy Architecture
-
-Within the **Gravito Galaxy Architecture**, Photon serves as the **Sensing Layer (Entry Point)**.
-
-- **Satellites**: Domain business units (like `Catalog` or `Membership`) define their routes using Photon's router and are mounted into the main application.
-- **Orbits**: Infrastructure modules (like `Auth` or `Telemetry`) provide middleware that Photon executes globally or per-route.
-- **IoC Bridge**: Photon seamlessly integrates with `@gravito/core`'s IoC container, allowing handlers to access injected services with zero boilerplate.
-
-```mermaid
-graph LR
-    User([User]) --> Photon[Photon Engine]
-    subgraph Galaxy
-        Photon --> SatelliteA[Satellite: Catalog]
-        Photon --> SatelliteB[Satellite: Auth]
-        Orbit[Orbit: Telemetry] -.-> Photon
-    end
-```
-
-## 🚀 Quick Start
-
-### Standard Mode (Hono-compatible)
-```typescript
-import { Photon } from '@gravito/photon'
-const app = new Photon()
-
-app.get('/', (c) => c.text('Hello from Photon!'))
-export default app
-```
-
-### Extreme Native Mode (Bun 1.39+)
-For maximum throughput, use the **Native Engine** which bypasses JS routing overhead.
-
-```typescript
-import { NativePhoton } from '@gravito/photon/native'
-
-const app = new NativePhoton()
-
-// High-performance static route (Native offloaded)
-app.get('/health', (c) => c.json({ status: 'ok' }))
-
-// Dynamic route (AOT optimized)
-app.get('/users/:id', (c) => c.json({ id: c.req.param('id') }))
-
-// Launch with native SIMD router
-export default app.serveConfig({
-  port: 3000
+app.use(async (c, next) => {
+  c.set('user', 'Ada')
+  c.header('x-photon', 'yes')
+  await next()
 })
+app.get('/hello', c => c.json({ message: 'Hello', user: c.get('user') }))
+app.post('/echo', async c => c.json(await c.req.json()))
+app.get('/error', () => { throw new HttpException(409, { message: 'Conflict' }) })
+app.onError((error, c) => c.json(
+  { error: error instanceof HttpException ? error.message : 'Internal error' },
+  error instanceof HttpException ? error.status : 500
+))
+
+if (import.meta.main) Bun.serve(app.serveConfig({ port: 3000 }))
 ```
 
----
-
-## 🏎️ Native Engine Optimizations
-
-The `@gravito/photon/native` engine leverages the latest Bun 1.39 features to achieve record-breaking performance:
-
-- **AOT Middleware Injection**: Pre-compiles middleware chains into a single function and injects them directly into Bun's native router.
-- **Zero-Microtask Dispatch**: Uses `Bun.peek()` to eliminate event loop overhead for synchronous handlers.
-- **Object Pooling**: Recycles request context objects to eliminate Garbage Collection pauses during high traffic.
-- **Zero-Copy Streaming**: Integrated with Bun's `direct` streams for kernel-level socket transfers.
-- **Binary-First**: Native support for `c.binary()` with optimized buffer management.
-
----
-
-## 🛡️ Security Middleware
-
-Photon provides a comprehensive set of HTTP security middleware, available via `@gravito/photon/middleware/security`. These middleware were migrated from `@gravito/core` as part of the Galaxy Architecture optimization (Phase 2.4).
-
-> **Migration note**: The `@gravito/core` exports are now `@deprecated` (v2.0.0). Use the photon imports below instead.
-
-```typescript
-import {
-  cors,
-  csrfProtection,
-  securityHeaders,
-  bodySizeLimit,
-  requireHeaderToken,
-  throttleRequests,
-} from '@gravito/photon/middleware/security'
+```sh
+bun app.ts
+curl http://localhost:3000/hello
+curl -X POST -H 'content-type: application/json' -d '{"value":42}' http://localhost:3000/echo
 ```
 
-### Available Middleware
+`/hello` returns `{"message":"Hello","user":"Ada"}` with `x-photon: yes`.
+`/error` returns HTTP 409; unknown paths return 404. Stop the server with Ctrl-C.
+Initialize required context variables in middleware before reading them. Contexts are
+request-scoped; copy values needed by background work before returning.
 
-| Middleware | Description | Key Options |
-|-----------|-------------|-------------|
-| `cors()` | Cross-Origin Resource Sharing | `origin`, `methods`, `credentials`, `maxAge` |
-| `csrfProtection()` | CSRF token validation | `cookieName`, `headerName`, `formFieldName` |
-| `securityHeaders()` | Helmet-style security headers | `contentSecurityPolicy`, `hsts`, `frameOptions` |
-| `bodySizeLimit(maxBytes)` | Request body size limiting | `methods`, `requireContentLength` |
-| `requireHeaderToken()` | Header-based token authentication | `headerName`, `token`, `status` |
-| `throttleRequests()` | Rate limiting (function-based) | `maxAttempts`, `decaySeconds`, `trustProxy` |
+For a strict consumer check, save `tsconfig.json`:
 
-### Usage Examples
-
-```typescript
-import { Photon } from '@gravito/photon'
-import { cors, securityHeaders, throttleRequests } from '@gravito/photon/middleware/security'
-
-const app = new Photon()
-
-// CORS
-app.use('*', cors({ origin: 'https://example.com', credentials: true }))
-
-// Security headers (Helmet-style)
-app.use('*', securityHeaders({ hsts: { maxAge: 31536000, preload: true } }))
-
-// Rate limiting (100 requests per 60 seconds)
-app.use('/api/*', throttleRequests({ maxAttempts: 100, decaySeconds: 60 }))
+```json
+{"compilerOptions":{"strict":true,"noEmit":true,"skipLibCheck":false,"target":"ESNext","module":"ESNext","moduleResolution":"bundler","types":["bun-types"]},"include":["app.ts"]}
 ```
 
-### API Changes from `@gravito/core`
+Run `bun x --no-install tsc -p tsconfig.json`.
 
-- **`throttleRequests`**: Changed from class-based (`new ThrottleRequests(core).handle(max, decay)`) to function-based (`throttleRequests({ maxAttempts, decaySeconds })`). No longer requires PlanetCore injection.
-- **`csrfProtection`**: Now uses built-in `parseCookies()` instead of `CookieJar` dependency. Fully self-contained.
-- **All middleware**: Use native Hono types (`Context`, `MiddlewareHandler`) instead of Gravito-specific types, enabling standalone use without `@gravito/core`.
+## Modules and behavior
 
----
+JWT, logger, binary/CBOR, HTMX, streaming, rate limiting and security middleware use
+explicit subpaths listed in the [migration guide](doc/INDEPENDENCE_MIGRATION.md).
+The package declares its required dependencies; core and resilience are not required.
+OTel is optional: install `@opentelemetry/api` to enable tracing; without it the
+middleware is a no-op. Redis rate limiting needs a caller-supplied compatible client.
 
-## 📚 Documentation
+`app.fast.get` and other fast handlers bypass Context, middleware **including security
+middleware**, and `onError`. Use standard routes for the API above. Fast-handler
+errors produce a sanitized 500. Hono client/router/Cloudflare/Deno/Vercel compatibility
+entries retain Hono contracts; they do not establish native Photon platform support.
+Deno types require Deno ambient declarations, and its adapter import fails under Bun.
+No Cloudflare, Deno or Vercel deployment has been verified.
 
-Detailed guides and references for the Galaxy Architecture:
+## Verify and migrate
 
-- [🏗️ **Architecture**](./doc/ARCHITECTURE.md) — Internals and implementation details.
-- [📖 **API Guide**](./doc/GUIDE.md) — Routing, Context, and Application API.
-- [🛰️ **Satellite Routing**](./doc/SATELLITE_ROUTING.md) — **NEW**: Best practices for mounting domain plugins.
-- [📡 **Real-time Comms**](./doc/REAL_TIME_COMMUNICATION.md) — **NEW**: SSE, WebSockets, and Streaming.
-- [🧪 **Testing Guide**](./doc/TESTING_GUIDE.md) — **NEW**: API testing, IoC mocking, and WebSocket tests.
-- [🔌 **Middleware**](./doc/MIDDLEWARE.md) — Built-in middleware (HTMX, Binary, Logger) and custom MW.
-- [🛡️ **Security Middleware**](#-security-middleware) — CORS, CSRF, Security Headers, Rate Limiting, and more.
-- [🔐 **JWT & Auth**](./doc/SECURITY.md) — Authentication, tokens, and best practices.
-- [🚀 **Evolution Plan**](./doc/EVOLUTION_PLAN.md) — Future roadmap and architectural enhancements.
+`bun run verify:release` runs independent source and tarball fixtures, strict public
+entrypoint and README checks, HTTP contracts, publint and a package dry-run. It prints
+an evidence directory containing logs, exit codes, package inventory and tarball.
+It never publishes. See [release verification](doc/RELEASE.md) and
+[benchmark methodology](doc/BENCHMARK.md).
 
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read the main [CONTRIBUTING.md](../../CONTRIBUTING.md) first.
-
-## 📝 License
-
-MIT © [Carl Lee](https://github.com/gravito-framework/gravito)
+The [migration guide](doc/INDEPENDENCE_MIGRATION.md) maps every old export, removed
+framework feature and HTTP behavior change. Historical Gravito tests live in
+`examples/photon-framework-regression`; they do not certify A7 integration.

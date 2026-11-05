@@ -2,7 +2,7 @@
   "name": "@gravito/photon",
   "sideEffects": false,
   "version": "2.0.1",
-  "description": "Gravito Photon HTTP engine (compat wrapper)",
+  "description": "Independent Bun HTTP engine with routing, middleware and typed request contexts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
@@ -10,7 +10,9 @@
     "dist",
     "README.md",
     "README.zh-TW.md",
-    "doc/INDEPENDENCE_MIGRATION.md"
+    "doc/INDEPENDENCE_MIGRATION.md",
+    "doc/RELEASE.md",
+    "doc/BENCHMARK.md"
   ],
   "exports": {
     ".": {
@@ -131,7 +133,9 @@
     "test:integration": "test $(find tests -name '*.integration.test.ts' 2>/dev/null | wc -l) -gt 0 && find tests -name '*.integration.test.ts' -print0 | xargs -0 bun test --timeout=10000 || echo 'No integration tests found'",
     "publint": "publint",
     "test:source-isolation": "bun scripts/test-source-isolation.ts",
-    "test:contracts": "bun scripts/test-contracts.ts"
+    "test:contracts": "bun scripts/test-contracts.ts",
+    "verify:release": "bun scripts/verify-release.ts",
+    "benchmark": "bun scripts/benchmark.ts"
   },
   "dependencies": {
     "cborg": "^4.3.2",

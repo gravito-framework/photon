@@ -1,0 +1,32 @@
+name: Photon independent release rehearsal
+on:
+  pull_request:
+    paths: ['packages/photon/**', '.github/workflows/photon-quality.yml']
+  push:
+    branches: [main]
+    paths: ['packages/photon/**', '.github/workflows/photon-quality.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Source, tarball, contracts, exports and publication dry-run
+        working-directory: packages/photon
+        env:
+          PHOTON_RELEASE_ARTIFACTS: ${{ runner.temp }}/photon-release
+        run: bun run verify:release
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: photon-release-evidence
+          path: ${{ runner.temp }}/photon-release
+          if-no-files-found: error

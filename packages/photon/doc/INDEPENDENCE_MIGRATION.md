@@ -1,6 +1,6 @@
 # Independent Photon: unreleased major migration
 
-Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP correctness, performance/release rehearsal and Gravito integration have later stories.
+Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP contracts are verified by Story08. Story09 adds the reproducible [release rehearsal](RELEASE.md) and [benchmark](BENCHMARK.md); Gravito integration remains a later story.
 
 ## Complete previous export map
 

@@ -76,6 +76,40 @@ try {
   for (const name of ['public.ts', 'variables.ts']) {
     await cp(join(root, 'scripts/fixtures', name), join(fixture, name))
   }
+  const readmeModules: string[] = []
+  for (const [index, name] of ['README.md', 'README.zh-TW.md'].entries()) {
+    const markdown = await readFile(join(root, name), 'utf8')
+    const blocks = [...markdown.matchAll(/```ts\n([\s\S]*?)```/g)]
+    if (blocks.length !== 1) throw new Error(`Expected one executable example in ${name}`)
+    const module = `readme-${index}`
+    readmeModules.push(module)
+    await writeFile(join(fixture, `${module}.ts`), blocks[0]![1]!)
+  }
+  await writeFile(
+    join(fixture, 'readme-test.ts'),
+    `
+import assert from 'node:assert/strict'
+${readmeModules.map((name, index) => `import { app as app${index} } from './${name}'`).join('\n')}
+for (const app of [${readmeModules.map((_, index) => `app${index}`).join(', ')}]) {
+  const server = Bun.serve(app.serveConfig({ port: 0, hostname: '127.0.0.1' }))
+  try {
+    const hello = await fetch(new URL('/hello', server.url))
+    assert.equal(hello.status, 200)
+    assert.equal(hello.headers.get('x-photon'), 'yes')
+    assert.deepEqual(await hello.json(), { message: 'Hello', user: 'Ada' })
+    const echo = await fetch(new URL('/echo', server.url), { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{"value":42}' })
+    assert.equal(echo.status, 200)
+    assert.deepEqual(await echo.json(), { value: 42 })
+    const error = await fetch(new URL('/error', server.url))
+    assert.equal(error.status, 409)
+    assert.deepEqual(await error.json(), { error: 'Conflict' })
+    assert.equal((await fetch(new URL('/missing', server.url))).status, 404)
+    assert.equal((await fetch(new URL('/hello', server.url))).status, 200)
+  } finally { await server.stop(true) }
+}
+console.log('Both README examples passed real HTTP and recovery checks')
+`
+  )
   await writeFile(
     join(fixture, 'optional-absent.ts'),
     `
@@ -103,7 +137,7 @@ console.log('OTel physically absent; root and no-op middleware work')
         moduleResolution: 'bundler',
         types: ['bun-types'],
       },
-      include: ['smoke.ts', 'variables.ts'],
+      include: ['smoke.ts', 'variables.ts', 'readme-*.ts'],
     })
   )
   await writeFile(
@@ -199,6 +233,7 @@ ${test.source}
     throw new Error('Unexpected diagnostic outside rejection cases')
   }
   await run(['bun', 'smoke.ts'], fixture)
+  await run(['bun', 'readme-test.ts'], fixture)
 } finally {
   await rm(fixture, { recursive: true, force: true })
 }
