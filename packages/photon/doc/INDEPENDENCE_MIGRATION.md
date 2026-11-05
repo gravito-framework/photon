@@ -93,3 +93,48 @@ The fixture is private and not the future integration package. `bun run --cwd ex
 `bun run test:source-isolation` copies the actual Photon package outside the repository without dist/node_modules, then installs, builds, typechecks and tests it. `bun run test:standalone` clean-builds and packs it, checks the dependency tree, links and declarations, verifies every public entry, asserts invalid types and runs socket HTTP contracts. Both require Bun 1.4.4. The consumer explicitly installs TypeScript 5.9.3, bun-types 1.3.10 and Deno types only for the Deno compatibility type check; root typing needs no Deno or OTel ambient declarations.
 
 Rollback is limited to this story's API/fixture/relocation/dependency diff. Restore the preserved Story 06 checkpoint, not the whole worktree. Keep the unrelated Bun 1.4.4 pins and earlier changes.
+
+## Story08 HTTP behavior contracts
+
+`bun run test:contracts` builds and packs the current package, installs it outside the
+repository with explicit TypeScript and Bun types, typechecks with `strict` and
+`skipLibCheck=false`, and runs the same HTTP suite through `request`, `fetch`, and
+real `Bun.serve(app.serveConfig({ port: 0 }))` sockets. Servers close in `finally`,
+including assertion failures. This is a Bun 1.4.4 contract, not a new platform claim.
+
+- Standard dispatch preserves Context headers on returned raw/mounted responses,
+  default 404s and fallback 500s. Explicit response headers take precedence over
+  pending headers with the same name; multiple pending `Set-Cookie` values are
+  preserved individually without duplication; `c.header()` after `await next()` can overwrite
+  them. A returned response takes precedence over an implicit `c.res`; middleware
+  that returns nothing may replace `c.res`. Default 404 is available while middleware
+  unwinds, with `text/plain` content type.
+- Sync throws, async rejections and repeated `next()` calls reach `onError`.
+  If it throws/rejects, the response is `500`, `text/plain`, `Internal Server Error`.
+  Already-set Context headers remain. Code after a rejected `await next()` does not
+  run; use `finally` for cleanup. Middleware must await/return its `next()` work. Concurrent repeated `next()`
+  waits for already-started downstream work before error handling and pool release,
+  including recovery by outer middleware. Each handler settles its own `next()` calls
+  before control returns to its caller.
+- Root mounts now match `/`; mount prefixes preserve query, method and body, and
+  `/api` does not match `/apix`. Root wildcard matching follows the same fallback
+  rules as other paths.
+- Pooled Context state is valid only during the awaited request lifecycle. Capture
+  needed values before asynchronous background/stream work. `native.request` now
+  refers to the current request. Mutable request params no longer poison the router
+  cache or another request; variables, params, query, headers and response state are
+  isolated across concurrent requests and reuse.
+- Fast paths match **exact method and literal pathname** and bypass that application's
+  Context, middleware (including security middleware), and `onError`. Parent middleware
+  still runs when a child application is mounted in a standard route. Native GET
+  offload now checks method/path and falls back to Photon for other methods; paths
+  containing `:` or `*` remain literal and use the fetch dispatcher.
+- **Fast error behavior changes:** synchronous throws and rejected fast handlers now
+  produce a sanitized `500`, `text/plain`, `Internal Server Error` consistently in
+  `request`, `fetch` and `serveConfig` sockets. They no longer escape as rejected
+  in-process requests or reach Bun's `error` callback. Handle errors inside the fast
+  handler if a custom response is required. Use standard routes when Context-based
+  error handling or security middleware is required.
+
+Rollback is the Story08-only diff; preserve the independent engine/API migration
+from Stories06–07 and the existing Bun pins. No intermediate release is authorized.

@@ -25,9 +25,37 @@ export class BunContext<V extends object = GravitoVariables> implements GravitoC
   private _executionCtx?: ExecutionContext
 
   // Stored response (Photon-like behavior)
-  public res: Response | undefined
+  private _res: Response | undefined
 
-  public readonly native: unknown
+  get res(): Response | undefined {
+    return this._res
+  }
+
+  set res(response: Response | undefined) {
+    if (response) {
+      const headers = new Headers(response.headers)
+      let changed = false
+      for (const [name, value] of this._headers) {
+        if (!response.headers.has(name)) {
+          headers.append(name, value)
+          changed = true
+        }
+      }
+      // Raw and mounted responses may have immutable headers (e.g. fetch()).
+      if (changed) {
+        response = new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers,
+        })
+      }
+    }
+    this._res = response
+  }
+
+  get native(): unknown {
+    return { request: this.req.raw, env: this.env, executionCtx: this._executionCtx }
+  }
 
   constructor(
     request: Request,
@@ -36,7 +64,6 @@ export class BunContext<V extends object = GravitoVariables> implements GravitoC
   ) {
     this.req = new BunRequest(request)
     this._executionCtx = executionCtx
-    this.native = { request, env, executionCtx }
   }
 
   /**

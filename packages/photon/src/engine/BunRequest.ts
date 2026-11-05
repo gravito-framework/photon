@@ -15,12 +15,12 @@ export class BunRequest implements GravitoRequest {
     params: Record<string, string> = {}
   ) {
     this._url = new URL(raw.url)
-    this._params = params
+    this._params = { ...params }
   }
 
   // Internal: Set params after route match
   setParams(params: Record<string, string>) {
-    this._params = params
+    this._params = { ...params }
   }
 
   get url(): string {

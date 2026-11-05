@@ -130,7 +130,8 @@
     "test:unit": "bun test tests/ --timeout=10000",
     "test:integration": "test $(find tests -name '*.integration.test.ts' 2>/dev/null | wc -l) -gt 0 && find tests -name '*.integration.test.ts' -print0 | xargs -0 bun test --timeout=10000 || echo 'No integration tests found'",
     "publint": "publint",
-    "test:source-isolation": "bun scripts/test-source-isolation.ts"
+    "test:source-isolation": "bun scripts/test-source-isolation.ts",
+    "test:contracts": "bun scripts/test-contracts.ts"
   },
   "dependencies": {
     "cborg": "^4.3.2",

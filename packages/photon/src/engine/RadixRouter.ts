@@ -118,11 +118,7 @@ export class RadixRouter<V extends object = GravitoVariables> {
 
     // Fast path for root
     if (path === '/' || path === '') {
-      const handlers = this.root.handlers.get(normalizedMethod)
-      if (handlers) {
-        return { handlers, params: {}, options: this.root.options.get(normalizedMethod) }
-      }
-      return null
+      return this.matchRecursive(this.root, [], 0, {}, normalizedMethod)
     }
 
     // P2 optimization: Check route cache first

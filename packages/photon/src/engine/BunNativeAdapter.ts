@@ -287,7 +287,14 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
     for (const [method, pathMap] of this.fastPathRegistry.getAll()) {
       if (method === 'GET') {
         for (const [path, handler] of pathMap) {
-          routes[path] = handler
+          // Fast paths are literal; Bun interprets ':' and '*' as route patterns.
+          if (path.includes(':') || path.includes('*')) {
+            continue
+          }
+          routes[path] = (request) =>
+            request.method === 'GET' && new URL(request.url).pathname === path
+              ? this.executeFastHandler(handler, request)
+              : this.fetch(request)
         }
       }
     }
@@ -331,7 +338,7 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
     // Fast-path bypass (Ultra-low latency, bypasses context pooling and DI)
     const fastHandler = this.fastPathRegistry.match(request.method, path)
     if (fastHandler) {
-      return fastHandler(request)
+      return this.executeFastHandler(fastHandler, request)
     }
 
     // WebSocket upgrade check (before context acquisition)
@@ -385,7 +392,8 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
         try {
           const response = await this.errorHandler(err as Error, ctx)
           if (response) {
-            return response
+            ctx.res = response
+            return ctx.res ?? response
           }
         } catch (e) {
           // biome-ignore lint/suspicious/noConsole: HTTP adapter error boundary — no Logger injected in BunNativeAdapter
@@ -394,10 +402,25 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
       }
       // biome-ignore lint/suspicious/noConsole: HTTP adapter error boundary — no Logger injected in BunNativeAdapter
       console.error(err)
-      return new Response('Internal Server Error', { status: 500 })
+      return ctx.text('Internal Server Error', 500)
     } finally {
       // P0 Fix: Always release context back to pool
       this.releaseContext(ctx)
+    }
+  }
+
+  private async executeFastHandler(
+    handler: (request: Request) => Response | Promise<Response>,
+    request: Request
+  ): Promise<Response> {
+    try {
+      return await handler(request)
+    } catch {
+      // Fast routes deliberately bypass Context and the Context-based onError hook.
+      return new Response('Internal Server Error', {
+        status: 500,
+        headers: { 'content-type': 'text/plain' },
+      })
     }
   }
 
@@ -415,19 +438,34 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
 
       const fn = handlers[i]
       if (!fn) {
-        return undefined
+        return ctx.res ?? ctx.text('Not Found', 404)
       }
 
-      const result = await fn(ctx, async () => {
-        const res = await dispatch(i + 1)
-        // If next() returned a response, attach it to context so subsequent c.header() calls work
-        if (res && ctx.res !== res) {
-          ctx.res = res
-        }
-        return res
-      })
+      const pending: Promise<Response | undefined>[] = []
+      let result: Response | undefined | void
+      try {
+        result = await fn(ctx, () => {
+          const downstream = (async () => {
+            const res = await dispatch(i + 1)
+            if (res && ctx.res !== res) {
+              ctx.res = res
+            }
+            return res
+          })()
+          pending.push(downstream)
+          return downstream
+        })
+      } finally {
+        // Settle this handler's next() calls before its caller can recover or reuse ctx.
+        // Tracking direct children avoids waiting on an ancestor's own promise.
+        await Promise.allSettled(pending)
+      }
 
-      return result ?? undefined
+      if (result) {
+        ctx.res = result
+        return ctx.res
+      }
+      return ctx.res
     }
 
     const finalResponse = await dispatch(0)
@@ -445,6 +483,6 @@ export class BunNativeAdapter<V extends object = GravitoVariables> implements Ht
     }
 
     // If no response returned and no notFoundHandler handled it:
-    return new Response('Not Found', { status: 404 })
+    return ctx.text('Not Found', 404)
   }
 }
