@@ -13,7 +13,7 @@
  * @since 1.1.0
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
+import type { GravitoContext, HttpContext, MiddlewareFor } from '../../engine/http-types'
 
 type RateLimiterLike = {
   attempt: (
@@ -64,7 +64,9 @@ export type ThrottleRequestsOptions = {
  * ```
  * @public
  */
-export function throttleRequests(options: ThrottleRequestsOptions = {}): GravitoMiddleware {
+export function throttleRequests(
+  options: ThrottleRequestsOptions = {}
+): MiddlewareFor<HttpContext & Pick<GravitoContext, 'get'>> {
   const maxAttempts = options.maxAttempts ?? 60
   const decaySeconds = options.decaySeconds ?? 60
   const trustProxy = options.trustProxy ?? false
@@ -73,7 +75,7 @@ export function throttleRequests(options: ThrottleRequestsOptions = {}): Gravito
   // keyCache：WeakMap 以 Request 為鍵，避免重複解析相同請求的 IP
   const keyCache = new WeakMap<Request, string>()
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: MiddlewareFor<HttpContext & Pick<GravitoContext, 'get'>> = async (c, next) => {
     const cache = c.get('cache') as CacheLike | undefined
     if (!cache) {
       // 若 cache 服務不可用，略過限速並記錄警告

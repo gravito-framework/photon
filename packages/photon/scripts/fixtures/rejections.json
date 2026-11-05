@@ -1,0 +1,167 @@
+[
+  {
+    "name": "case-02",
+    "diagnostic": 2305,
+    "source": "import { NativePhoton } from '@gravito/photon/native'"
+  },
+  {
+    "name": "case-03",
+    "diagnostic": 2307,
+    "source": "import { PhotonAdapter } from '@gravito/photon/adapter'"
+  },
+  {
+    "name": "case-05",
+    "diagnostic": 2345,
+    "source": "app.get('/', c => c.text(c.get('missing')))"
+  },
+  {
+    "name": "case-06",
+    "diagnostic": 2345,
+    "source": "app.get('/', c => { c.set('user', 1); return c.text('bad') })"
+  },
+  {
+    "name": "case-07",
+    "diagnostic": 2532,
+    "source": "app.get('/', c => c.text(c.get('optional').toUpperCase()))"
+  },
+  {
+    "name": "case-09",
+    "diagnostic": 2345,
+    "source": "const incompatible: GravitoMiddleware<{ user: number }> = c => c.json(c.get('user'))\napp.use(incompatible)"
+  },
+  {
+    "name": "case-10",
+    "diagnostic": 2345,
+    "source": "app.router.add('invalid', '/', [])"
+  },
+  {
+    "name": "case-11",
+    "diagnostic": 2345,
+    "source": "app.router.add('get', '/', [c => { c.set('user', false); return c.text('bad') }])"
+  },
+  {
+    "name": "case-12",
+    "diagnostic": 2345,
+    "source": "app.native.route('get', '/', c => { c.set('user', 3); return c.text('bad') })"
+  },
+  {
+    "name": "case-13",
+    "diagnostic": 2345,
+    "source": "app.fast.get('/fast', () => new Response()).get('/', c => c.text(c.get('missing')))"
+  },
+  {
+    "name": "case-14",
+    "diagnostic": 2345,
+    "source": "app.onError((_e, c) => c.text(c.get('missing')))"
+  },
+  {
+    "name": "case-15",
+    "diagnostic": 2345,
+    "source": "app.onNotFound(c => c.text(c.get('missing')))"
+  },
+  {
+    "name": "case-16",
+    "diagnostic": 2322,
+    "source": "app.serveConfig({ port: false })"
+  },
+  {
+    "name": "case-17",
+    "diagnostic": 2322,
+    "source": "app.serveConfig({ port: 3000, unix: '/tmp/photon.sock' })"
+  },
+  {
+    "name": "case-18",
+    "diagnostic": 2322,
+    "source": "app.serveConfig({ fetch: () => new Response() })"
+  },
+  {
+    "name": "case-19",
+    "diagnostic": 2322,
+    "source": "app.serveConfig({ routes: {} })"
+  },
+  {
+    "name": "case-20",
+    "diagnostic": 2322,
+    "source": "app.serveConfig({ websocket: { message() {} } })"
+  },
+  {
+    "name": "case-union-writer",
+    "diagnostic": 2345,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.use(writer)"
+  },
+  {
+    "name": "case-union-global",
+    "diagnostic": 2345,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.useGlobal(writer)"
+  },
+  {
+    "name": "case-union-scoped",
+    "diagnostic": 2345,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.useScoped('/scope', '/route', writer)"
+  },
+  {
+    "name": "case-union-route",
+    "diagnostic": 2345,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.get('/', writer)"
+  },
+  {
+    "name": "case-union-native",
+    "diagnostic": 2345,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.native.route('get', '/', writer)"
+  },
+  {
+    "name": "case-union-router",
+    "diagnostic": 2322,
+    "source": "const writer: GravitoMiddleware<{ user: string | number }> = async (c, next) => { c.set('user', 123); await next() }; app.router.add('get', '/', [writer])"
+  },
+  {
+    "name": "case-rate-callback",
+    "diagnostic": 2345,
+    "source": "import { rateLimit } from '@gravito/photon/middleware/ratelimit'; app.use(rateLimit<{ user: string | number }>({ maxRequests: 1, windowMs: 1000, keyGenerator: c => { c.set('user', 1); return 'key' } }))"
+  },
+  {
+    "name": "case-preset-callback",
+    "diagnostic": 2345,
+    "source": "import { rateLimiter } from '@gravito/photon/middleware/ratelimit'; app.use(rateLimiter.strict<{ user: string | number }>({ keyGenerator: c => { c.set('user', 1); return 'key' } }))"
+  },
+  {
+    "name": "case-otel-callback",
+    "diagnostic": 2345,
+    "source": "import { otelMiddleware } from '@gravito/photon/middleware/otel'; app.use(otelMiddleware<{ user: string | number }>({ spanNameResolver: c => { c.set('user', 1); return 'span' } }))"
+  },
+  {
+    "name": "case-headers-callback",
+    "diagnostic": 2345,
+    "source": "import { securityHeaders } from '@gravito/photon/middleware/security'; app.use(securityHeaders<{ user: string | number }>({ contentSecurityPolicy: c => { c.set('user', 1); return 'default-src none' } }))"
+  },
+  {
+    "name": "case-token-callback",
+    "diagnostic": 2345,
+    "source": "import { requireHeaderToken } from '@gravito/photon/middleware/security'; app.use(requireHeaderToken<{ user: string | number }>({ token: c => { c.set('user', 1); return 'token' } }))"
+  },
+  {
+    "name": "case-jwt-slot",
+    "diagnostic": 2345,
+    "source": "import { jwt } from '@gravito/photon/jwt'; new Photon<{ jwtPayload: string }>().use(jwt({secret:'secret'}))"
+  },
+  {
+    "name": "case-htmx-slot",
+    "diagnostic": 2345,
+    "source": "import { htmxMiddleware, type HtmxVariables } from '@gravito/photon/middleware/htmx'; new Photon<HtmxVariables & { htmx: true }>().use(htmxMiddleware())"
+  },
+  {
+    "name": "case-key-value-correlation",
+    "diagnostic": 2345,
+    "source": "new Photon<{ name: string; count: number }>().get('/', c => { const key = Math.random() > 0.5 ? 'name' : 'count'; c.set(key, 'wrong'); return c.text('bad') })"
+  },
+  {
+    "name": "case-unknown-write",
+    "diagnostic": 2345,
+    "source": "app.get('/', c => { c.set('missing', 1); return c.text('bad') })"
+  },
+  {
+    "name": "case-context-writer",
+    "diagnostic": 2345,
+    "source": "import type { GravitoContext } from '@gravito/photon'; const writer = (c: GravitoContext<{user:string|number}>) => { c.set('user',123) }; app.use(writer)"
+  }
+]

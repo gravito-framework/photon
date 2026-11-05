@@ -8,10 +8,16 @@
  * @since 1.0.0
  */
 
-import type { GravitoContext, GravitoMiddleware } from '@gravito/core'
+import type {
+  GravitoContext,
+  GravitoMiddleware,
+  GravitoVariables,
+  HttpContext,
+  MiddlewareFor,
+} from '../engine/http-types'
 
 // Type alias for convenience
-type Context = GravitoContext
+type Context<V extends object = GravitoVariables> = GravitoContext<V>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OpenTelemetry API 類型定義（避免硬依賴）
@@ -42,7 +48,7 @@ interface OtelApi {
 // 配置介面
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface OtelMiddlewareConfig {
+export interface OtelMiddlewareConfig<V extends object = GravitoVariables> {
   /**
    * 服務名稱（用於 span 的 service.name 屬性）
    * @default 'photon'
@@ -66,7 +72,7 @@ export interface OtelMiddlewareConfig {
    * 自定義 span 名稱生成器
    * @default (c) => `${c.req.method} ${c.req.routePath || c.req.path}`
    */
-  spanNameResolver?: (c: Context) => string
+  spanNameResolver?: (c: Context<V>) => string
 
   /**
    * 是否在 response header 中傳播 trace id
@@ -188,7 +194,15 @@ function getSpanStatusCode(
  * }))
  * ```
  */
-export function otelMiddleware(config: OtelMiddlewareConfig = {}): GravitoMiddleware {
+type PlainOtelConfig = Omit<OtelMiddlewareConfig, 'spanNameResolver'> & { spanNameResolver?: never }
+
+export function otelMiddleware(config?: PlainOtelConfig): MiddlewareFor<HttpContext>
+export function otelMiddleware<V extends object = GravitoVariables>(
+  config: OtelMiddlewareConfig<V>
+): GravitoMiddleware<V>
+export function otelMiddleware<V extends object = GravitoVariables>(
+  config: OtelMiddlewareConfig<V> = {}
+): GravitoMiddleware<V> {
   const {
     serviceName = 'photon',
     serviceVersion = '1.0.0',
@@ -203,7 +217,7 @@ export function otelMiddleware(config: OtelMiddlewareConfig = {}): GravitoMiddle
     tracer: api.trace.getTracer(serviceName, serviceVersion),
   }))
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: GravitoMiddleware<V> = async (c, next) => {
     const { api: otelApi, tracer } = await initPromise
     const path = new URL(c.req.url).pathname
 

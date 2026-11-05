@@ -8,16 +8,22 @@
  * @since 1.0.0
  */
 
-import type { GravitoContext, GravitoMiddleware } from '@gravito/core'
+import type {
+  GravitoContext,
+  GravitoMiddleware,
+  GravitoVariables,
+  HttpContext,
+  MiddlewareFor,
+} from '../engine/http-types'
 
 // Type alias for convenience (used in config types)
-type Context = GravitoContext
+type Context<V extends object = GravitoVariables> = GravitoContext<V>
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-export interface RateLimitConfig {
+export interface RateLimitConfig<V extends object = GravitoVariables> {
   /**
    * Maximum number of requests allowed within the time window
    * @default 100
@@ -42,7 +48,7 @@ export interface RateLimitConfig {
    * Custom key generator function
    * @default (c) => c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown'
    */
-  keyGenerator?: (c: Context) => string | Promise<string>
+  keyGenerator?: (c: Context<V>) => string | Promise<string>
 
   /**
    * Storage backend for rate limit state
@@ -54,13 +60,13 @@ export interface RateLimitConfig {
    * Custom handler for rate-limited requests
    * @default (c) => c.json({ error: 'Too Many Requests', retryAfter: <seconds> }, 429)
    */
-  onRateLimitExceeded?: (c: Context, retryAfter: number) => Response | Promise<Response>
+  onRateLimitExceeded?: (c: Context<V>, retryAfter: number) => Response | Promise<Response>
 
   /**
    * Skip rate limiting for certain requests
    * @default undefined
    */
-  skip?: (c: Context) => boolean | Promise<boolean>
+  skip?: (c: Context<V>) => boolean | Promise<boolean>
 
   /**
    * Custom headers to include in responses
@@ -270,7 +276,7 @@ export class MemoryStore implements RateLimitStore {
  * }
  * ```
  */
-const defaultKeyGenerator = (c: Context): string => {
+const defaultKeyGenerator = (c: HttpContext): string => {
   // Extract first IP from x-forwarded-for (closest to client in chain)
   const forwarded = c.req.header('x-forwarded-for')
   if (forwarded) {
@@ -283,7 +289,7 @@ const defaultKeyGenerator = (c: Context): string => {
 /**
  * Default rate limit exceeded handler
  */
-const defaultOnRateLimitExceeded = (c: Context, retryAfter: number): Response => {
+const defaultOnRateLimitExceeded = (c: HttpContext, retryAfter: number): Response => {
   return c.json(
     {
       error: 'Too Many Requests',
@@ -318,7 +324,22 @@ const defaultOnRateLimitExceeded = (c: Context, retryAfter: number): Response =>
  * }))
  * ```
  */
-export function rateLimit(config: RateLimitConfig): GravitoMiddleware {
+type PlainRateLimitConfig = Omit<
+  RateLimitConfig,
+  'keyGenerator' | 'skip' | 'onRateLimitExceeded'
+> & {
+  keyGenerator?: never
+  skip?: never
+  onRateLimitExceeded?: never
+}
+
+export function rateLimit(config: PlainRateLimitConfig): MiddlewareFor<HttpContext>
+export function rateLimit<V extends object = GravitoVariables>(
+  config: RateLimitConfig<V>
+): GravitoMiddleware<V>
+export function rateLimit<V extends object = GravitoVariables>(
+  config: RateLimitConfig<V>
+): GravitoMiddleware<V> {
   const {
     maxRequests,
     windowMs,
@@ -330,7 +351,7 @@ export function rateLimit(config: RateLimitConfig): GravitoMiddleware {
     draftHeaders = false,
   } = config
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: GravitoMiddleware<V> = async (c, next) => {
     if (skip && (await skip(c))) {
       await next()
       return undefined
@@ -368,36 +389,25 @@ export function rateLimit(config: RateLimitConfig): GravitoMiddleware {
 /**
  * Convenience factory: Create rate limiter with common presets
  */
+function createPreset(defaults: Pick<RateLimitConfig, 'maxRequests' | 'windowMs'>) {
+  function preset(overrides?: Partial<PlainRateLimitConfig>): MiddlewareFor<HttpContext>
+  function preset<V extends object = GravitoVariables>(
+    overrides: Partial<RateLimitConfig<V>>
+  ): GravitoMiddleware<V>
+  function preset<V extends object = GravitoVariables>(
+    overrides?: Partial<RateLimitConfig<V>>
+  ): GravitoMiddleware<V> {
+    return rateLimit<V>({ ...defaults, ...overrides })
+  }
+  return preset
+}
+
 export const createRateLimiter = {
-  /**
-   * Strict: 10 requests per minute
-   */
-  strict: (overrides?: Partial<RateLimitConfig>): GravitoMiddleware =>
-    rateLimit({ maxRequests: 10, windowMs: 60000, ...overrides }),
-
-  /**
-   * Moderate: 60 requests per minute
-   */
-  moderate: (overrides?: Partial<RateLimitConfig>): GravitoMiddleware =>
-    rateLimit({ maxRequests: 60, windowMs: 60000, ...overrides }),
-
-  /**
-   * Lenient: 100 requests per minute
-   */
-  lenient: (overrides?: Partial<RateLimitConfig>): GravitoMiddleware =>
-    rateLimit({ maxRequests: 100, windowMs: 60000, ...overrides }),
-
-  /**
-   * API: 1000 requests per hour
-   */
-  api: (overrides?: Partial<RateLimitConfig>): GravitoMiddleware =>
-    rateLimit({ maxRequests: 1000, windowMs: 3600000, ...overrides }),
-
-  /**
-   * Auth: 5 attempts per 15 minutes (for login endpoints)
-   */
-  auth: (overrides?: Partial<RateLimitConfig>): GravitoMiddleware =>
-    rateLimit({ maxRequests: 5, windowMs: 900000, ...overrides }),
+  strict: createPreset({ maxRequests: 10, windowMs: 60000 }),
+  moderate: createPreset({ maxRequests: 60, windowMs: 60000 }),
+  lenient: createPreset({ maxRequests: 100, windowMs: 60000 }),
+  api: createPreset({ maxRequests: 1000, windowMs: 3600000 }),
+  auth: createPreset({ maxRequests: 5, windowMs: 900000 }),
 }
 
 /**

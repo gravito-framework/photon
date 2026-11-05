@@ -1,5 +1,5 @@
-import type { GravitoMiddleware } from '@gravito/core'
 import { encode } from 'cborg'
+import type { HttpContext, MiddlewareFor } from '../engine/http-types'
 
 /**
  * Binary Middleware for Photon.
@@ -32,8 +32,8 @@ import { encode } from 'cborg'
  * - Binary format reduces payload size by 20-40% on average.
  * - Optimized to read body directly without clone(), saving ~30% overhead.
  */
-export const binaryMiddleware = (): GravitoMiddleware => {
-  const middleware: GravitoMiddleware = async (c, next) => {
+export const binaryMiddleware = (): MiddlewareFor<HttpContext> => {
+  const middleware: MiddlewareFor<HttpContext> = async (c, next) => {
     const res = await next()
 
     const accept = c.req.header('Accept')

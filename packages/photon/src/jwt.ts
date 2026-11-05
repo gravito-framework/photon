@@ -8,8 +8,8 @@
  * @public
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
 import { jwtVerify, SignJWT } from 'jose'
+import type { MiddlewareFor, WriteContext } from './engine/http-types'
 
 /**
  * JWT Payload type - payload data contained in the token
@@ -38,7 +38,7 @@ export interface JwtOptions {
  * JWT middleware function type
  * @public
  */
-export type JwtFunction = (options: JwtOptions) => GravitoMiddleware
+export type JwtFunction = (options: JwtOptions) => JwtMiddleware
 
 const sharedEncoder = new TextEncoder()
 
@@ -190,7 +190,7 @@ export function decode(token: string): { header: JwtHeader; payload: JwtPayload 
  * ```
  * @public
  */
-export function jwt(options: JwtOptions): GravitoMiddleware {
+export function jwt(options: JwtOptions): JwtMiddleware {
   return async (ctx, next) => {
     const authHeader = ctx.req.header('Authorization')
 
@@ -265,3 +265,9 @@ export async function verifyWithJwks(
     'verifyWithJwks is not yet implemented in native JWT. Use verify() with explicit secret instead.'
   )
 }
+
+/** Missing or invalid tokens do not populate this slot. */
+export interface JwtVariables {
+  jwtPayload?: JwtPayload
+}
+export type JwtMiddleware = MiddlewareFor<WriteContext<{ jwtPayload: JwtPayload }>>

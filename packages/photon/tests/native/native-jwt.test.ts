@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import type { GravitoContext } from '@gravito/core'
+import type { GravitoContext } from '../../src/engine/http-types'
 import { Photon } from '../../src/index'
 import { decode, jwt, sign, verify } from '../../src/jwt'
 

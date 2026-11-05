@@ -8,7 +8,7 @@
  * @since 1.1.0
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
+import type { HttpContext, MiddlewareFor } from '../../engine/http-types'
 
 /**
  * Options for body size limiting
@@ -39,10 +39,10 @@ const defaultMethods = ['POST', 'PUT', 'PATCH', 'DELETE']
 export function bodySizeLimit(
   maxBytes: number,
   options: BodySizeLimitOptions = {}
-): GravitoMiddleware {
+): MiddlewareFor<HttpContext> {
   const allowedMethods = (options.methods ?? defaultMethods).map((m) => m.toUpperCase())
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: MiddlewareFor<HttpContext> = async (c, next) => {
     const method = c.req.method.toUpperCase()
     if (!allowedMethods.includes(method)) {
       await next()

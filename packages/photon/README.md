@@ -1,3 +1,46 @@
+# Photon — independent engine development slice
+
+This is an unreleased major-version migration. Gravito integration is not yet restored.
+
+```sh
+bun add @gravito/photon
+```
+
+The install command above applies after this version is released. To try this local slice, run `bun run build`, `bun pm pack`, then install the generated tarball in a separate project.
+
+```ts
+import { Photon } from '@gravito/photon'
+
+const app = new Photon()
+app.get('/hello', c => c.json({ message: 'Hello' }))
+app.onError((_error, c) => c.json({ error: 'Internal error' }, 500))
+Bun.serve({ port: 3000, fetch: request => app.fetch(request) })
+```
+
+Run `bun run test:standalone` for a clean tarball install, strict consumer typecheck and real HTTP contract tests. The runtime package does not install Gravito core or resilience. Run `bun run test:source-isolation` to verify source install/build/typecheck/test outside the monorepo. Framework-only regression tests are preserved separately under `examples/photon-framework-regression`.
+
+## Typed variables and optional modules
+
+```ts
+import { Photon } from '@gravito/photon'
+import { cors } from '@gravito/photon/middleware/cors'
+import { HttpException } from '@gravito/photon/http-exception'
+
+interface Variables { user: string }
+const app = new Photon<Variables>()
+app.use(cors())
+app.use(async (c, next) => { c.set('user', 'Ada'); await next() })
+app.get('/', c => c.json({ user: c.get('user') }))
+app.onError((error, c) => c.text(error.message, error instanceof HttpException ? error.status : 500))
+Bun.serve(app.serveConfig({ port: 3000 }))
+```
+
+Initialize required variables before use. For typed JWT/HTMX applications, include `JwtVariables`/`HtmxVariables` in your variable map; [the migration guide](doc/INDEPENDENCE_MIGRATION.md) covers callback generics and write compatibility. Mounted children have their own Context. Middleware is imported through its documented subpath. OTel is optional (`bun add @opentelemetry/api`); without it, tracing middleware is a no-op. Redis rate limiting requires a compatible client supplied by the caller. Hono client/router/platform paths retain Hono contracts and do not establish native Photon platform support. Deno adapter types need Deno ambient declarations, and the adapter cannot currently be imported under Bun.
+
+See [migration status](doc/INDEPENDENCE_MIGRATION.md). The previous framework-oriented documentation below is historical and is being replaced in subsequent stories.
+
+---
+
 # @gravito/photon
 
 > The high-performance HTTP engine powering the Gravito Galaxy Architecture.

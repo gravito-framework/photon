@@ -18,7 +18,7 @@
  * @public
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
+import type { HttpContext, MiddlewareFor } from './engine/http-types'
 
 /**
  * Request logger middleware
@@ -27,7 +27,7 @@ import type { GravitoMiddleware } from '@gravito/core'
  *
  * @returns GravitoMiddleware
  */
-export function logger(): GravitoMiddleware {
+export function logger(): MiddlewareFor<HttpContext> {
   return async (ctx, next) => {
     const start = Date.now()
     const method = ctx.req.method

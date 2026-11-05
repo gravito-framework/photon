@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
-import { Photon } from '@gravito/photon'
+import { Photon } from '../../index'
 import { otelMiddleware } from '../otel'
 
 // ─────────────────────────────────────────────────────────────────────────────

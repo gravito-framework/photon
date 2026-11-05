@@ -8,7 +8,7 @@
  * @public
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
+import type { GravitoMiddleware } from './engine/http-types'
 
 /**
  * Identity function for Gravito middleware.

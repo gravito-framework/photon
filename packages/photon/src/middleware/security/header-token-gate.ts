@@ -8,7 +8,13 @@
  * @since 1.1.0
  */
 
-import type { GravitoContext as Context, GravitoMiddleware } from '@gravito/core'
+import type {
+  GravitoContext,
+  GravitoMiddleware,
+  GravitoVariables,
+  HttpContext,
+  MiddlewareFor,
+} from '../../engine/http-types'
 
 /**
  * Timing-safe string comparison to prevent timing attacks
@@ -26,28 +32,38 @@ function timingSafeCompare(a: string, b: string): boolean {
  * Options for header token gate
  * @public
  */
-export type HeaderTokenGateOptions = {
+export type HeaderTokenGateOptions<V extends object = GravitoVariables> = {
   headerName?: string
-  token?: string | ((c: Context) => string | undefined)
+  token?: string | ((c: GravitoContext<V>) => string | undefined)
 }
 
 /**
  * Options for requireHeaderToken middleware
  * @public
  */
-export type RequireHeaderTokenOptions = HeaderTokenGateOptions & {
-  status?: number
-  message?: string
-}
+export type RequireHeaderTokenOptions<V extends object = GravitoVariables> =
+  HeaderTokenGateOptions<V> & {
+    status?: number
+    message?: string
+  }
 
 /**
  * Create a simple gate function to check a header token.
  * Uses timing-safe comparison to prevent timing attacks.
  * @public
  */
-export function createHeaderGate(options: HeaderTokenGateOptions = {}) {
+type PlainHeaderTokenGateOptions = Omit<HeaderTokenGateOptions, 'token'> & { token?: string }
+export function createHeaderGate(
+  options?: PlainHeaderTokenGateOptions
+): (c: HttpContext) => Promise<boolean>
+export function createHeaderGate<V extends object = GravitoVariables>(
+  options: HeaderTokenGateOptions<V>
+): (c: GravitoContext<V>) => Promise<boolean>
+export function createHeaderGate<V extends object = GravitoVariables>(
+  options: HeaderTokenGateOptions<V> = {}
+) {
   const headerName = options.headerName ?? 'x-admin-token'
-  return async (c: Context): Promise<boolean> => {
+  return async (c: GravitoContext<V>): Promise<boolean> => {
     const expected =
       typeof options.token === 'function'
         ? options.token(c)
@@ -65,12 +81,22 @@ export function createHeaderGate(options: HeaderTokenGateOptions = {}) {
  * Useful for internal API authentication.
  * @public
  */
-export function requireHeaderToken(options: RequireHeaderTokenOptions = {}): GravitoMiddleware {
-  const gate = createHeaderGate(options)
+type PlainRequireHeaderTokenOptions = PlainHeaderTokenGateOptions &
+  Pick<RequireHeaderTokenOptions, 'status' | 'message'>
+export function requireHeaderToken(
+  options?: PlainRequireHeaderTokenOptions
+): MiddlewareFor<HttpContext>
+export function requireHeaderToken<V extends object = GravitoVariables>(
+  options: RequireHeaderTokenOptions<V>
+): GravitoMiddleware<V>
+export function requireHeaderToken<V extends object = GravitoVariables>(
+  options: RequireHeaderTokenOptions<V> = {}
+): GravitoMiddleware<V> {
+  const gate = createHeaderGate<V>(options)
   const status = options.status ?? 403
   const message = options.message ?? 'Unauthorized'
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: GravitoMiddleware<V> = async (c, next) => {
     if (!(await gate(c))) {
       return c.text(message, status)
     }

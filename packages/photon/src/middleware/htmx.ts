@@ -1,4 +1,4 @@
-import type { GravitoMiddleware } from '@gravito/core'
+import type { MiddlewareFor, WriteContext } from '../engine/http-types'
 
 /**
  * HTMX Middleware for Photon.
@@ -39,8 +39,8 @@ import type { GravitoMiddleware } from '@gravito/core'
  * - `htmx.target`: The ID of the target element.
  * - `htmx.trigger`: The ID of the trigger element.
  */
-export const htmxMiddleware = (): GravitoMiddleware => {
-  const middleware: GravitoMiddleware = async (c, next) => {
+export const htmxMiddleware = (): MiddlewareFor<WriteContext<HtmxWrites>> => {
+  const middleware: MiddlewareFor<WriteContext<HtmxWrites>> = async (c, next) => {
     // Check for HTMX request header
     const isHtmx = c.req.header('HX-Request') === 'true'
 
@@ -64,3 +64,14 @@ export const htmxMiddleware = (): GravitoMiddleware => {
 
   return middleware
 }
+
+export type HtmxWrites = Record<
+  'htmx' | 'htmx.boosted' | 'htmx.historyRestoreRequest' | 'htmx.request',
+  boolean
+> &
+  Record<
+    'htmx.currentUrl' | 'htmx.prompt' | 'htmx.target' | 'htmx.trigger' | 'htmx.triggerName',
+    string | null
+  >
+/** Only htmx is populated on every request. */
+export type HtmxVariables = Pick<HtmxWrites, 'htmx'> & Partial<Omit<HtmxWrites, 'htmx'>>

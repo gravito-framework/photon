@@ -10,7 +10,7 @@
  * @since 1.1.0
  */
 
-import type { GravitoContext as Context, GravitoMiddleware } from '@gravito/core'
+import type { HttpContext as Context, HttpContext, MiddlewareFor } from '../../engine/http-types'
 
 /**
  * Cookie 設定選項（從 @gravito/core CookieOptions 提取，避免循環依賴）
@@ -130,7 +130,7 @@ export function getCsrfToken(c: Context, options: CsrfOptions = {}): string {
  * Middleware that validates CSRF tokens on unsafe requests.
  * @public
  */
-export function csrfProtection(options: CsrfOptions = {}): GravitoMiddleware {
+export function csrfProtection(options: CsrfOptions = {}): MiddlewareFor<HttpContext> {
   const cookieName = options.cookieName ?? 'gravito_csrf'
   const headerName = (options.headerName ?? 'X-CSRF-Token').toLowerCase()
   const formFieldName = options.formFieldName ?? '_token'

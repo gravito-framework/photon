@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { describe, expect, it } from 'bun:test'
-import { Photon } from '@gravito/photon'
+import { Photon } from '../../index'
 import { MemoryStore, rateLimit, rateLimiter } from '../ratelimit'
 
 describe('Rate Limiting Middleware', () => {

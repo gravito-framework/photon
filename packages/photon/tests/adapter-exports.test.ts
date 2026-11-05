@@ -58,12 +58,14 @@ describe('Deno adapter exports', () => {
     // 注意：deno adapter 設計用於 Deno 執行環境
     // serveStatic 在 bun/node 環境中因 Deno global 不存在而無法直接測試
     // 但我們可以確認 adapter 模組結構的 import 是否能被解析
-    const adapterModule = await import('../src/adapter/deno').catch(() => null)
-    // 如果模組導入失敗（Deno 環境問題），跳過測試
-    if (adapterModule === null) {
-      return
+    try {
+      const adapterModule = await import('../src/adapter/deno')
+      expect(typeof adapterModule.getConnInfo).toBe('function')
+    } catch (error) {
+      // Some Hono versions require the Deno global at module initialization.
+      expect(error).toBeInstanceOf(ReferenceError)
+      expect((error as Error).message).toContain('Deno')
     }
-    expect(typeof adapterModule.getConnInfo).toBe('function')
   })
 })
 

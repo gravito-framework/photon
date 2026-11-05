@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { GravitoContext } from '@gravito/core'
-import { HttpException } from '@gravito/core'
 import * as clientExports from '../src/client'
-import * as httpExceptionExports from '../src/http-exception'
+import type { GravitoContext } from '../src/engine/http-types'
 import { Photon } from '../src/index'
 import * as loggerExports from '../src/logger'
 import * as regExpRouterExports from '../src/router/reg-exp-router'
@@ -12,7 +10,7 @@ import * as trieRouterExports from '../src/router/trie-router'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const projectRoot = join(__dirname, '../../..')
+const projectRoot = join(__dirname, '..')
 
 const keys = (mod: Record<string, unknown>) => Object.keys(mod).sort()
 
@@ -30,11 +28,6 @@ describe('photon exports', () => {
 
   it('exports native logger function', () => {
     expect(typeof loggerExports.logger).toBe('function')
-  })
-
-  it('re-exports http-exception helpers from @gravito/core', () => {
-    expect(typeof httpExceptionExports.HttpException).toBe('function')
-    expect(httpExceptionExports.HttpException).toBe(HttpException)
   })
 
   it('re-exports jwt helpers via compat shim', async () => {
@@ -57,10 +50,7 @@ describe('photon exports', () => {
     it('re-exports Cloudflare Workers adapter via ./adapter/cloudflare', async () => {
       const { readFileSync } = await import('fs')
       // Verify built dist file exists and contains the expected exports
-      const cloudflareJs = readFileSync(
-        join(projectRoot, 'packages/photon/dist/adapter/cloudflare.js'),
-        'utf-8'
-      )
+      const cloudflareJs = readFileSync(join(projectRoot, 'dist/adapter/cloudflare.js'), 'utf-8')
       expect(cloudflareJs).toContain('serveStatic')
       expect(cloudflareJs).toContain('getConnInfo')
       expect(cloudflareJs).toContain('handle')
@@ -69,10 +59,7 @@ describe('photon exports', () => {
     it('re-exports Deno adapter via ./adapter/deno', async () => {
       const { readFileSync } = await import('fs')
       // Verify built dist file exists and contains the expected exports
-      const denoJs = readFileSync(
-        join(projectRoot, 'packages/photon/dist/adapter/deno.js'),
-        'utf-8'
-      )
+      const denoJs = readFileSync(join(projectRoot, 'dist/adapter/deno.js'), 'utf-8')
       expect(denoJs).toContain('serveStatic')
       expect(denoJs).toContain('getConnInfo')
       expect(denoJs).toContain('upgradeWebSocket')
@@ -81,10 +68,7 @@ describe('photon exports', () => {
     it('re-exports Vercel adapter via ./adapter/vercel', async () => {
       const { readFileSync } = await import('fs')
       // Verify built dist file exists and contains the expected exports
-      const vercelJs = readFileSync(
-        join(projectRoot, 'packages/photon/dist/adapter/vercel.js'),
-        'utf-8'
-      )
+      const vercelJs = readFileSync(join(projectRoot, 'dist/adapter/vercel.js'), 'utf-8')
       expect(vercelJs).toContain('handle')
       expect(vercelJs).toContain('getConnInfo')
     })
@@ -93,18 +77,9 @@ describe('photon exports', () => {
       // This is a static check — verify that the source files contain
       // the @deprecated notices that users will see in their IDE
       const { readFileSync } = await import('fs')
-      const cloudflareSource = readFileSync(
-        join(projectRoot, 'packages/photon/src/adapter/cloudflare.ts'),
-        'utf-8'
-      )
-      const denoSource = readFileSync(
-        join(projectRoot, 'packages/photon/src/adapter/deno.ts'),
-        'utf-8'
-      )
-      const vercelSource = readFileSync(
-        join(projectRoot, 'packages/photon/src/adapter/vercel.ts'),
-        'utf-8'
-      )
+      const cloudflareSource = readFileSync(join(projectRoot, 'src/adapter/cloudflare.ts'), 'utf-8')
+      const denoSource = readFileSync(join(projectRoot, 'src/adapter/deno.ts'), 'utf-8')
+      const vercelSource = readFileSync(join(projectRoot, 'src/adapter/vercel.ts'), 'utf-8')
 
       expect(cloudflareSource).toContain('@deprecated v2.0')
       expect(cloudflareSource).toContain('Removal target: v3.0')
@@ -136,12 +111,6 @@ describe('RPC client exports (@gravito/photon/client)', () => {
     const { existsSync } = await import('fs')
     const dtsPath = join(__dirname, '../dist/client.d.ts')
     expect(existsSync(dtsPath)).toBe(true)
-  })
-
-  it('beam package createBeam function works with hono RPC type system', async () => {
-    const beam = await import('@gravito/beam')
-    // Verify createBeam is a function that accepts Hono type parameter
-    expect(typeof beam.createBeam).toBe('function')
   })
 })
 

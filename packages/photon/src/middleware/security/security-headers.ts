@@ -8,7 +8,13 @@
  * @since 1.1.0
  */
 
-import type { GravitoContext as Context, GravitoMiddleware } from '@gravito/core'
+import type {
+  GravitoContext,
+  GravitoMiddleware,
+  GravitoVariables,
+  HttpContext,
+  MiddlewareFor,
+} from '../../engine/http-types'
 
 /**
  * HSTS Configuration
@@ -24,8 +30,8 @@ export type HstsOptions = {
  * Options for Security Headers middleware
  * @public
  */
-export type SecurityHeadersOptions = {
-  contentSecurityPolicy?: string | false | ((c: Context) => string | false)
+export type SecurityHeadersOptions<V extends object = GravitoVariables> = {
+  contentSecurityPolicy?: string | false | ((c: GravitoContext<V>) => string | false)
   frameOptions?: string | false
   referrerPolicy?: string | false
   noSniff?: boolean
@@ -50,8 +56,22 @@ function buildHstsHeader(options: HstsOptions): string {
  * Apply common security headers to responses (Helmet-style).
  * @public
  */
-export function securityHeaders(options: SecurityHeadersOptions = {}): GravitoMiddleware {
-  const defaults: Required<Omit<SecurityHeadersOptions, 'contentSecurityPolicy' | 'hsts'>> = {
+type PlainSecurityHeadersOptions = Omit<SecurityHeadersOptions, 'contentSecurityPolicy'> & {
+  contentSecurityPolicy?: string | false
+}
+export function securityHeaders<V extends object = GravitoVariables>(
+  options: SecurityHeadersOptions<V> & {
+    contentSecurityPolicy: (c: GravitoContext<V>) => string | false
+  }
+): GravitoMiddleware<V>
+export function securityHeaders(options?: PlainSecurityHeadersOptions): MiddlewareFor<HttpContext>
+export function securityHeaders<V extends object = GravitoVariables>(
+  options: SecurityHeadersOptions<V>
+): GravitoMiddleware<V>
+export function securityHeaders<V extends object = GravitoVariables>(
+  options: SecurityHeadersOptions<V> = {}
+): GravitoMiddleware<V> {
+  const defaults: Required<Omit<SecurityHeadersOptions<V>, 'contentSecurityPolicy' | 'hsts'>> = {
     frameOptions: 'DENY',
     referrerPolicy: 'no-referrer',
     noSniff: true,
@@ -65,7 +85,7 @@ export function securityHeaders(options: SecurityHeadersOptions = {}): GravitoMi
     ...options,
   }
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: GravitoMiddleware<V> = async (c, next) => {
     if (merged.noSniff) {
       c.header('X-Content-Type-Options', 'nosniff')
     }

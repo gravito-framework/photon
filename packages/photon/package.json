@@ -9,23 +9,14 @@
   "files": [
     "dist",
     "README.md",
-    "README.zh-TW.md"
+    "README.zh-TW.md",
+    "doc/INDEPENDENCE_MIGRATION.md"
   ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "bun": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./native": {
-      "types": "./dist/native.d.ts",
-      "bun": "./dist/native.js",
-      "default": "./dist/native.js"
-    },
-    "./adapter": {
-      "types": "./dist/adapter/index.d.ts",
-      "bun": "./dist/adapter/index.js",
-      "default": "./dist/adapter/index.js"
     },
     "./client": {
       "types": "./dist/client.d.ts",
@@ -92,11 +83,6 @@
       "bun": "./dist/middleware/ratelimit.js",
       "default": "./dist/middleware/ratelimit.js"
     },
-    "./http-exception": {
-      "types": "./dist/http-exception.d.ts",
-      "bun": "./dist/http-exception.js",
-      "default": "./dist/http-exception.js"
-    },
     "./router/reg-exp-router": {
       "types": "./dist/router/reg-exp-router.d.ts",
       "bun": "./dist/router/reg-exp-router.js",
@@ -121,25 +107,36 @@
       "types": "./dist/adapter/deno.d.ts",
       "bun": "./dist/adapter/deno.js",
       "default": "./dist/adapter/deno.js"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "bun": "./dist/native.js",
+      "default": "./dist/native.js"
+    },
+    "./http-exception": {
+      "types": "./dist/http-exception.d.ts",
+      "bun": "./dist/http-exception.js",
+      "default": "./dist/http-exception.js"
     }
   },
   "scripts": {
     "build": "bun run build.ts",
     "build:dts": "bun run build.ts --dts-only",
     "test": "bun test --timeout=10000",
+    "test:standalone": "bun scripts/test-standalone.ts",
     "test:coverage": "bun test --timeout=10000 --coverage --coverage-reporter=lcov --coverage-dir coverage && bun run --bun scripts/check-coverage.ts",
     "test:ci": "bun test --timeout=10000 --coverage --coverage-reporter=lcov --coverage-dir coverage && bun run --bun scripts/check-coverage.ts",
     "typecheck": "bun tsc -p tsconfig.json --noEmit --skipLibCheck",
     "test:unit": "bun test tests/ --timeout=10000",
     "test:integration": "test $(find tests -name '*.integration.test.ts' 2>/dev/null | wc -l) -gt 0 && find tests -name '*.integration.test.ts' -print0 | xargs -0 bun test --timeout=10000 || echo 'No integration tests found'",
-    "publint": "publint"
+    "publint": "publint",
+    "test:source-isolation": "bun scripts/test-source-isolation.ts"
   },
   "dependencies": {
-    "@gravito/core": "^2.0.6",
-    "@gravito/resilience": "workspace:*",
     "cborg": "^4.3.2",
     "jose": "^6.2.2",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "hono": "^4.12.2"
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.0.0"
@@ -151,7 +148,10 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.0.0",
-    "bun-types": "^1.3.10"
+    "bun-types": "^1.3.10",
+    "typescript": "^5.9.3",
+    "@types/node": "^25.0.8",
+    "@opentelemetry/api": "^1.9.0"
   },
   "publishConfig": {
     "access": "public"
@@ -160,5 +160,6 @@
     "type": "git",
     "url": "git+https://github.com/gravito-framework/gravito.git",
     "directory": "packages/photon"
-  }
+  },
+  "type": "module"
 }

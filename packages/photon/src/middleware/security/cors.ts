@@ -8,7 +8,7 @@
  * @since 1.1.0
  */
 
-import type { GravitoMiddleware } from '@gravito/core'
+import type { HttpContext, MiddlewareFor } from '../../engine/http-types'
 
 /**
  * Allowed origin(s) configuration.
@@ -50,7 +50,7 @@ function resolveOrigin(
  * Middleware handling Cross-Origin Resource Sharing (CORS).
  * @public
  */
-export function cors(options: CorsOptions = {}): GravitoMiddleware {
+export function cors(options: CorsOptions = {}): MiddlewareFor<HttpContext> {
   const methods = (
     options.methods ?? ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
   ).join(', ')
@@ -60,7 +60,7 @@ export function cors(options: CorsOptions = {}): GravitoMiddleware {
   const maxAge = options.maxAge
   const optionsStatus = options.optionsSuccessStatus ?? 204
 
-  const middleware: GravitoMiddleware = async (c, next) => {
+  const middleware: MiddlewareFor<HttpContext> = async (c, next) => {
     const requestOrigin = c.req.header('Origin')
     const allowOrigin = resolveOrigin(options.origin, requestOrigin)
 

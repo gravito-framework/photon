@@ -1,22 +1,25 @@
+import type { PhotonServeConfig, PhotonServeOptions } from './engine/serve-types'
+
 /**
  * @fileoverview Photon - Gravito 原生 HTTP 引擎
  *
  * 使用 Bun 原生 HTTP Adapter，提供高效能、型別安全的路由系統。
- * 完全基於 @gravito/core 的 BunNativeAdapter，無 Hono 依賴。
+ * 使用 Photon 自有的 Bun HTTP 引擎。
  *
  * @module @gravito/photon/photon
  * @public
  */
 
+import { BunNativeAdapter } from './engine/BunNativeAdapter'
 import type {
   GravitoErrorHandler,
-  GravitoHandler,
   GravitoMiddleware,
   GravitoNotFoundHandler,
-} from '@gravito/core'
-import { BunNativeAdapter, type BunRouteOptions } from '@gravito/core'
+  GravitoVariables,
+} from './engine/http-types'
+import type { BunRouteOptions } from './engine/types'
 
-type MountablePhotonApp = Photon | BunNativeAdapter
+type MountablePhotonApp = { fetch(request: Request): Response | Promise<Response> }
 
 /**
  * Native handler type for fast-path routes.
@@ -30,23 +33,23 @@ export type NativeFastHandler = (req: Request) => Response | Promise<Response>
  * All handlers bypass GravitoContext, DI container, and middleware chains.
  * @public
  */
-export interface FastPathProxy {
+export interface FastPathProxy<V extends object = GravitoVariables> {
   /** Register a fast-path handler for any method. */
-  (method: string, path: string, handler: NativeFastHandler): Photon
+  (method: string, path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast GET handler (no context, no DI). */
-  get(path: string, handler: NativeFastHandler): Photon
+  get(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast POST handler (no context, no DI). */
-  post(path: string, handler: NativeFastHandler): Photon
+  post(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast PUT handler (no context, no DI). */
-  put(path: string, handler: NativeFastHandler): Photon
+  put(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast DELETE handler (no context, no DI). */
-  delete(path: string, handler: NativeFastHandler): Photon
+  delete(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast PATCH handler (no context, no DI). */
-  patch(path: string, handler: NativeFastHandler): Photon
+  patch(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast HEAD handler (no context, no DI). */
-  head(path: string, handler: NativeFastHandler): Photon
+  head(path: string, handler: NativeFastHandler): Photon<V>
   /** Register a fast OPTIONS handler (no context, no DI). */
-  options(path: string, handler: NativeFastHandler): Photon
+  options(path: string, handler: NativeFastHandler): Photon<V>
 }
 
 /**
@@ -56,8 +59,8 @@ export interface FastPathProxy {
  *
  * @public
  */
-export class Photon {
-  private adapter = new BunNativeAdapter()
+export class Photon<V extends object = GravitoVariables> {
+  private adapter = new BunNativeAdapter<V>()
 
   /**
    * Fast-path routing proxy.
@@ -74,44 +77,47 @@ export class Photon {
    *
    * @since 2.2.0
    */
-  readonly fast: FastPathProxy = this._buildFastProxy()
+  readonly fast: FastPathProxy<V> = this._buildFastProxy()
 
-  get(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  get(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('get', path, ...handlers)
     return this
   }
 
-  post(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  post(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('post', path, ...handlers)
     return this
   }
 
-  put(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  put(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('put', path, ...handlers)
     return this
   }
 
-  delete(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  delete(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('delete', path, ...handlers)
     return this
   }
 
-  patch(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  patch(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('patch', path, ...handlers)
     return this
   }
 
-  head(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  head(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('head', path, ...handlers)
     return this
   }
 
-  options(path: string, ...handlers: (GravitoHandler | GravitoMiddleware | BunRouteOptions)[]): this {
+  options(path: string, ...handlers: (GravitoMiddleware<V> | BunRouteOptions)[]): this {
     this.adapter.route('options', path, ...handlers)
     return this
   }
 
-  use(pathOrMiddleware: string | GravitoMiddleware, ...middleware: GravitoMiddleware[]): this {
+  use(
+    pathOrMiddleware: string | GravitoMiddleware<V>,
+    ...middleware: GravitoMiddleware<V>[]
+  ): this {
     if (typeof pathOrMiddleware === 'string') {
       this.adapter.use(pathOrMiddleware, ...middleware)
       return this
@@ -121,17 +127,17 @@ export class Photon {
     return this
   }
 
-  useGlobal(...middleware: GravitoMiddleware[]): this {
+  useGlobal(...middleware: GravitoMiddleware<V>[]): this {
     this.adapter.useGlobal(...middleware)
     return this
   }
 
-  useScoped(scope: string, path: string, ...middleware: GravitoMiddleware[]): this {
+  useScoped(scope: string, path: string, ...middleware: GravitoMiddleware<V>[]): this {
     this.adapter.useScoped(scope, path, ...middleware)
     return this
   }
 
-  route(basePath: string, app: Photon): this {
+  route(basePath: string, app: MountablePhotonApp): this {
     this.mount(basePath, app)
     return this
   }
@@ -142,12 +148,12 @@ export class Photon {
     return this
   }
 
-  onError(handler: GravitoErrorHandler): this {
+  onError(handler: GravitoErrorHandler<V>): this {
     this.adapter.onError(handler)
     return this
   }
 
-  onNotFound(handler: GravitoNotFoundHandler): this {
+  onNotFound(handler: GravitoNotFoundHandler<V>): this {
     this.adapter.onNotFound(handler)
     return this
   }
@@ -173,12 +179,12 @@ export class Photon {
     return this.adapter.websocket
   }
 
-  get native(): BunNativeAdapter {
+  get native(): BunNativeAdapter<V> {
     return this.adapter
   }
 
   get router() {
-    return (this.adapter as any).router
+    return this.adapter.router
   }
 
   /**
@@ -196,21 +202,21 @@ export class Photon {
    * Bun.serve(app.serveConfig({ port: 3000 }))
    * ```
    */
-  serveConfig(baseConfig?: Record<string, unknown>): Record<string, unknown> {
-    return this.adapter.serveConfig!(baseConfig)
+  serveConfig(baseConfig?: PhotonServeOptions): PhotonServeConfig {
+    return this.adapter.serveConfig(baseConfig)
   }
 
   /**
    * Build the fast-path proxy callable.
    * Returns a function with HTTP-method shorthand properties attached.
    */
-  private _buildFastProxy(): FastPathProxy {
-    const register = (method: string, path: string, handler: NativeFastHandler): Photon => {
-      this.adapter.registerFastPath!(method, path, handler)
+  private _buildFastProxy(): FastPathProxy<V> {
+    const register = (method: string, path: string, handler: NativeFastHandler): Photon<V> => {
+      this.adapter.registerFastPath(method, path, handler)
       return this
     }
 
-    const proxy = (method: string, path: string, handler: NativeFastHandler): Photon =>
+    const proxy = (method: string, path: string, handler: NativeFastHandler): Photon<V> =>
       register(method, path, handler)
 
     proxy.get = (path: string, handler: NativeFastHandler) => register('GET', path, handler)
@@ -219,9 +225,8 @@ export class Photon {
     proxy.delete = (path: string, handler: NativeFastHandler) => register('DELETE', path, handler)
     proxy.patch = (path: string, handler: NativeFastHandler) => register('PATCH', path, handler)
     proxy.head = (path: string, handler: NativeFastHandler) => register('HEAD', path, handler)
-    proxy.options = (path: string, handler: NativeFastHandler) =>
-      register('OPTIONS', path, handler)
+    proxy.options = (path: string, handler: NativeFastHandler) => register('OPTIONS', path, handler)
 
-    return proxy as FastPathProxy
+    return proxy
   }
 }

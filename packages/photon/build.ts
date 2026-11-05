@@ -57,14 +57,13 @@ async function buildInParallel() {
       const buildResult = await build({
         entrypoints: [
           'src/index.ts',
-          'src/photon.ts',
           'src/native.ts',
+          'src/http-exception.ts',
+          'src/photon.ts',
           'src/client.ts',
           'src/logger.ts',
           'src/jwt.ts',
-          'src/http-exception.ts',
           'src/middleware/binary.ts',
-          'src/middleware/circuit-breaker.ts',
           'src/middleware/htmx.ts',
           'src/middleware/otel.ts',
           'src/middleware/ratelimit-redis.ts',
@@ -77,7 +76,6 @@ async function buildInParallel() {
           'src/middleware/websocket.ts',
           'src/adapter/cloudflare.ts',
           'src/adapter/deno.ts',
-          'src/adapter/index.ts',
           'src/adapter/vercel.ts',
           'src/router/reg-exp-router.ts',
           'src/router/trie-router.ts',
@@ -89,7 +87,7 @@ async function buildInParallel() {
         splitting: true,
         minify: process.env.NODE_ENV === 'production',
         sourcemap: 'external',
-        external: ['@gravito/core', '@gravito/photon', 'hono', 'zod', 'cborg'],
+        external: ['hono', 'zod', 'cborg', '@opentelemetry/api'],
       })
 
       if (!buildResult.success) {
