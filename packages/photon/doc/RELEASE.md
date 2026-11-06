@@ -32,8 +32,8 @@ must still work after an application error. Socket servers close on failed asser
 Dependencies are installed in isolated directories, not via monorepo node_modules.
 
 The dedicated `photon-quality.yml` CI job runs this rehearsal without a workspace
-install or cached dist and uploads evidence even on failure. The existing release
-workflow also runs it before Changesets publication. This is a required command in
+install or cached dist and uploads evidence even on failure. The manual `Publish Photon` workflow also runs it before publishing the verified
+tarball; version/channel checks prevent publishing a beta as `latest`. This is a required command in
 the workflow; repository branch-protection settings are not changed by this story.
 Benchmarks run separately on one quiet machine with both revisions; hosted CI timing
 is not an automatic performance approval. Review unexplained regressions before release.
@@ -51,3 +51,10 @@ export dispositions and framework compatibility. A7 remains pending; historical
 framework regression tests do not establish integration package or core version support.
 The current package version is not release authorization. This command never runs
 `npm publish`. Roll back only the Story09 diff, preserving preceding stories and Bun pins.
+
+## Independent repository publication
+
+Source verification requires the package-local lockfile and uses frozen installs.
+The root is not a workspace; neither quality nor release installs the site.
+See [repository cutover](../../../docs/CUTOVER.md) for the beta/stable sequence.
+Local verification does not publish or authorize publication.

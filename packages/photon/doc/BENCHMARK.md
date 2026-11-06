@@ -1,6 +1,6 @@
 # Photon source benchmark (A10)
 
-Run from `packages/photon` with Bun **1.4.4**, Git, tar, and the repository's installed dependencies:
+Run from `packages/photon` with Bun **1.4.4**, Git, tar, and the engine package's installed dependencies:
 
 ```sh
 bun scripts/benchmark.ts
@@ -10,13 +10,15 @@ bun scripts/benchmark.ts /tmp/photon-benchmark-results
 bun scripts/benchmark-investigate.ts /tmp/photon-benchmark-investigation
 ```
 
-The runner compares the actual `Photon` class at fixed commit
-`ae0db3aa40ff91435065a8e739d6a027339eb8fa` with the current checkout. It extracts historical
-sources using `git archive`, copies the identical worker into that archive, and uses the
-historical root tsconfig to resolve historical workspace sources. Installed third-party
-dependencies are shared via a temporary node_modules symlink. This is a source-engine
-comparison, not an isolated installation or tarball benchmark; release fixtures cover those
-separately. No pre-existing worktree is changed and temporary files are removed on failure.
+The runner compares the independent engine at extraction commit
+`89f81ea04d4447f5ce64b44219b34dc6bb8c1c17` with the current checkout. Set
+`PHOTON_BENCHMARK_BASELINE` to another independent-engine commit in this repository
+when needed. It extracts `packages/photon` using `git archive`, copies the identical
+worker into that archive, and shares the installed package-local dependencies through
+a temporary symlink. No Gravito checkout, root workspace or historical framework
+source is required. Default output is `artifacts/benchmark-<timestamp>`.
+This is a source-engine comparison, not an isolated installation or tarball benchmark;
+release fixtures cover those separately. Temporary files are removed on failure.
 
 Each of standard text route, one async global middleware (with a response header), and
 raw fast GET returns status 200/body `OK`. Every request asserts status/body; middleware
@@ -43,7 +45,7 @@ of selecting the best round. Default output directories have a timestamp.
 
 ## 2026-11-05 measurement
 
-Old SHA above vs current `7539ff8` plus recorded working-tree changes, Bun 1.4.4 on the same
+Historical Gravito SHA `ae0db3aa40ff91435065a8e739d6a027339eb8fa` vs `7539ff8` plus recorded working-tree changes, Bun 1.4.4 on the same
 Apple Silicon macOS machine. Full evidence lives in
 `.scratch/photon-independence/evidence/story09/benchmark-quiet/` outside the monorepo root;
 `benchmark-report.md` beside it contains **every** measured round and latency percentile.

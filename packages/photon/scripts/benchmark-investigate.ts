@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path'
 const root = resolve(import.meta.dirname, '../../..')
 const output = resolve(
   process.argv[2] ??
-    join(root, '../.scratch/photon-independence/evidence/story09/benchmark-investigation')
+    join(root, 'artifacts', `benchmark-investigation-${Date.now()}`)
 )
 assert.equal(Bun.version, '1.4.4')
 await mkdir(output, { recursive: true })
@@ -31,7 +31,7 @@ try {
       join(root, 'packages/photon/scripts/benchmark-worker.ts'),
       join(dir, 'scripts/benchmark-worker.ts')
     )
-    await symlink(join(root, 'node_modules'), join(dir, 'node_modules'))
+    await symlink(join(root, 'packages/photon/node_modules'), join(dir, 'node_modules'))
     const contextPath = join(dir, 'src/engine/BunContext.ts')
     const adapterPath = join(dir, 'src/engine/BunNativeAdapter.ts')
     if (variant === 'without-header-merge') {

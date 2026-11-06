@@ -45,7 +45,7 @@ try {
     await cp(join(root, name), join(stage, name), { recursive: true, dereference: false })
   }
   await run(['bun', 'run', 'test:source-isolation'], 'source-isolation')
-  await run(['bun', 'install', '--ignore-scripts'], 'install')
+  await run(['bun', 'install', '--frozen-lockfile', '--ignore-scripts'], 'install')
   await run(['bun', 'run', 'test:standalone'], 'standalone')
   await run(['bun', 'run', 'test:contracts'], 'contracts')
   // Pin the validation tool independently of the monorepo's hoisted tools.

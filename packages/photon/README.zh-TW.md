@@ -1,14 +1,14 @@
 # @gravito/photon
 
 獨立的 Bun HTTP 路由、middleware 與型別化請求 Context。
-目前為尚未發布的 major 遷移版本；套件版本號仍沿用歷史版本，不能用 registry
-版本替代此開發快照。Gravito 整合 A7 尚未完成，尚無已驗證的 core 配對版本。
+目前為尚未發布的 `3.0.0-beta.1` 遷移候選版；registry 的 `2.0.1` 是舊版
+Gravito wrapper，不能替代此引擎。Gravito 整合套件由原 repo 維護，新的 beta 配對仍須驗證。
 
 ## 從零啟動
 
 使用 Bun **1.4.4**。在本套件執行 `bun install --ignore-scripts`、`bun run build`、
 `bun pm pack --destination /tmp`。到 repo 外新目錄執行 `bun init -y`，再以
-`bun add /tmp/gravito-photon-2.0.1.tgz` 安裝剛產生的檔案（檔名以 pack 輸出為準）。
+`bun add /tmp/gravito-photon-3.0.0-beta.1.tgz` 安裝剛產生的檔案（檔名以 pack 輸出為準）。
 執行 `bun add -d typescript@5.9.3 bun-types@1.3.10`，將以下存為 `app.ts`：
 
 ```ts

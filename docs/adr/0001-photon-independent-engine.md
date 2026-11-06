@@ -4,6 +4,8 @@ status: accepted
 
 # Photon 擁有獨立 HTTP 引擎，Gravito 透過專用套件整合
 
+> 2026-11-06：[ADR 0002](0002-photon-independent-repository.md) 取代本文「保留 Monorepo」限制，其餘決策仍有效。
+
 Photon 現有 HTTP 實作與公開型別依賴 core，工作區原始碼與發布依賴亦解析至不同 core 版本。為達成 Library First，Photon 下一個 major 將擁有 Routing、Request/Response、Middleware、HTTP Error Handling 與 Runtime Adapter 的必要能力，優先遷移及整理現有實作，不重寫穩定引擎。
 
 Gravito Adapter 由獨立整合套件承接，依賴 Photon 與明確支援的 core 版本；Photon 不反向依賴 core 或整合套件，公開 declarations 也不得要求它們。容器、RequestScope 與命名路由 URL 生成屬框架整合層；獨立 Context 不建立框架服務。Runtime Adapter 與 Gravito Adapter 是不同責任。

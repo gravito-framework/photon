@@ -1,6 +1,6 @@
 # Independent Photon: unreleased major migration
 
-Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP contracts are verified by Story08. Story09 adds the reproducible [release rehearsal](RELEASE.md) and [benchmark](BENCHMARK.md); Gravito integration is provided by the unreleased `@gravito/photon-gravito` package; see its [migration guide](../../photon-gravito/README.md).
+Photon owns its Bun HTTP engine. It no longer installs or imports Gravito core/resilience, including source development and tests. This is still an intermediate major-version migration; do not publish it. HTTP contracts are verified by Story08. Story09 adds the reproducible [release rehearsal](RELEASE.md) and [benchmark](BENCHMARK.md); Gravito integration is provided by the unreleased `@gravito/photon-gravito` package; see its [migration guide](https://github.com/gravito-framework/gravito/blob/e045d3bf764bab212444e426bd8fc0cf375d22e3/packages/photon-gravito/README.md).
 
 ## Complete previous export map
 
@@ -156,9 +156,9 @@ One Photon instance belongs to one adapter. Parent/child adapters own separate s
 `setNative` after registration/dispatch is rejected. RequestScope cleanup is awaited after
 middleware and error rendering; retained wrappers cannot be used afterward.
 
-The [integration migration guide](../../photon-gravito/README.md) contains the exact
+The [integration migration guide](https://github.com/gravito-framework/gravito/blob/e045d3bf764bab212444e426bd8fc0cf375d22e3/packages/photon-gravito/README.md) contains the exact
 entry mapping and a complete runnable example; its socket fixture runs from installed
-tarballs. The tested pair is Photon 2.0.1, integration 0.1.0, core 3.0.1 and resilience
+tarballs. The historical local test pair (before repository extraction) was Photon 2.0.1, integration 0.1.0, core 3.0.1 and resilience
 2.0.0, with explicit OpenTelemetry API 1.9.0 on Bun 1.4.4. No other version range is certified.
 These are unreleased local artifacts, not a published compatibility claim.
 
@@ -168,3 +168,7 @@ are not populated yet. Observer failures use the existing error handler and Cont
 cleanup boundary. Fast paths and successful WebSocket upgrades bypass observation.
 With no observer there is no additional await. The integration uses this HTTP-only seam
 to capture its exact Context before user code; Photon gains no framework dependency.
+
+The extracted engine is now versioned `3.0.0-beta.1`; the historical local pairing
+above does not certify this new version. See the repository cutover runbook for
+registry beta verification before removing the original workspace package.

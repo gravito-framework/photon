@@ -4,11 +4,11 @@ import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/pr
 import { cpus, platform, release, tmpdir, totalmem } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
-const baseline = 'ae0db3aa40ff91435065a8e739d6a027339eb8fa'
+const baseline = process.env.PHOTON_BENCHMARK_BASELINE ?? '89f81ea04d4447f5ce64b44219b34dc6bb8c1c17'
 const root = resolve(import.meta.dirname, '../../..')
 const output = resolve(
   process.argv[2] ??
-    join(root, '../.scratch/photon-independence/evidence/story09', `benchmark-${Date.now()}`)
+    join(root, 'artifacts', `benchmark-${Date.now()}`)
 )
 if (Bun.version !== '1.4.4') {
   throw new Error('Benchmark requires Bun 1.4.4')
@@ -46,14 +46,13 @@ try {
     '--format=tar',
     `--output=${archive}`,
     baseline,
-    'packages',
-    'tsconfig.json',
+    'packages/photon',
   ])
   const old = join(temporary, 'old')
   await mkdir(old)
   await command(['tar', '-xf', archive, '-C', old])
-  // Reuse third-party dependencies, but resolve historical workspace code from the archive.
-  await symlink(join(root, 'node_modules'), join(old, 'node_modules'))
+  // Both revisions resolve the same package-local third-party dependencies.
+  await symlink(join(root, 'packages/photon/node_modules'), join(old, 'packages/photon/node_modules'))
   const workerRelative = 'packages/photon/scripts/benchmark-worker.ts'
   await mkdir(join(old, 'packages/photon/scripts'), { recursive: true })
   await cp(join(root, workerRelative), join(old, workerRelative))
@@ -79,7 +78,7 @@ try {
           .digest('hex'),
         currentDiffSha256: createHash('sha256').update(diff).digest('hex'),
         dependencyLockSha256: createHash('sha256')
-          .update(await readFile(join(root, 'bun.lock')))
+          .update(await readFile(join(root, 'packages/photon/bun.lock')))
           .digest('hex'),
         rounds: 5,
         load: {
@@ -90,7 +89,7 @@ try {
         ordering:
           'alternate old/current within each scenario, transport and round; fresh child process each time',
         dependencies:
-          'shared installed third-party dependencies; historical root tsconfig resolves archived workspace sources',
+          'shared package-local dependencies; independent-engine revisions only',
       },
       null,
       2
@@ -103,9 +102,6 @@ try {
         for (const label of round % 2 ? ['baseline', 'current'] : ['current', 'baseline']) {
           const cwd = label === 'baseline' ? old : root
           const args = [process.execPath]
-          if (label === 'baseline') {
-            args.push('--tsconfig-override', join(old, 'tsconfig.json'))
-          }
           args.push(join(cwd, workerRelative), scenario, transport, String(round))
           const child = Bun.spawn(args, {
             cwd,

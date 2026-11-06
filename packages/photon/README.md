@@ -1,9 +1,9 @@
 # @gravito/photon
 
 Independent HTTP routing, middleware and typed request contexts for Bun.
-This is an **unreleased major migration**. The package version is still historical;
-registry installs do not provide this development snapshot. Gravito integration (A7)
-is pending; no compatible core version pairing is claimed.
+This is the **unpublished 3.0.0-beta.1 migration candidate**. Registry version 2.0.1
+is the older Gravito wrapper and does not provide this engine. Gravito integration
+is maintained in the Gravito repository; the new beta pairing still requires verification.
 
 ## Start a local HTTP API
 
@@ -22,7 +22,7 @@ filename printed by `bun pm pack`:
 mkdir photon-api
 cd photon-api
 bun init -y
-bun add /tmp/gravito-photon-2.0.1.tgz
+bun add /tmp/gravito-photon-3.0.0-beta.1.tgz
 bun add -d typescript@5.9.3 bun-types@1.3.10
 ```
 

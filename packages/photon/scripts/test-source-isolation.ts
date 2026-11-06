@@ -18,7 +18,7 @@ try {
     if (['node_modules', 'dist', 'coverage'].includes(name)) continue
     await cp(join(root, name), join(fixture, name), { recursive: true, dereference: false })
   }
-  await run(['bun', 'install', '--ignore-scripts'])
+  await run(['bun', 'install', '--frozen-lockfile', '--ignore-scripts'])
   const lock = await readFile(join(fixture, 'bun.lock'), 'utf8')
   if (/@gravito\/(core|resilience)|workspace:/.test(lock)) {
     throw new Error('Source dependency tree contains framework or workspace dependencies')

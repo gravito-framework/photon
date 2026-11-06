@@ -1,7 +1,7 @@
 {
   "name": "@gravito/photon",
   "sideEffects": false,
-  "version": "2.0.1",
+  "version": "3.0.0-beta.1",
   "description": "Independent Bun HTTP engine with routing, middleware and typed request contexts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -163,8 +163,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gravito-framework/gravito.git",
+    "url": "git+https://github.com/gravito-framework/photon.git",
     "directory": "packages/photon"
   },
-  "type": "module"
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "engines": {
+    "bun": "1.4.4"
+  },
+  "homepage": "https://photon.gravito.dev",
+  "bugs": {
+    "url": "https://github.com/gravito-framework/photon/issues"
+  }
 }

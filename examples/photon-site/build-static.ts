@@ -134,7 +134,7 @@ async function build() {
       extraPaths,
     })
   } catch (err) {
-    console.error('❌ CRITICAL SSG ERROR:', err)
+    throw new Error('Photon static export failed', { cause: err })
   }
 
   // Manual fallback for sitemap.xml and robots.txt if SSG failed to generate them
